@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with New Features
+    Vortex Hub // Region of Violence (VD) - Complete Edition with Keybinds
     Author: TWKS
 ]]--
 
@@ -268,6 +268,7 @@ local Config = {
 }
 
 local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
+local FeatureBinds = {} -- Хранит назначенные клавиши для функций
 
 -- FAKE DAGGER ФУНКЦИЯ
 local function TriggerFakeDagger()
@@ -292,7 +293,7 @@ local function TriggerFakeDagger()
     end
 end
 
--- FLOWSTATE ФУНКЦИЯ (быстрое перелазание через окна)
+-- FLOWSTATE ФУНКЦИЯ
 local function ProcessFlowstate()
     if not Config.Flowstate then return end
     local char = LocalPlayer.Character
@@ -568,24 +569,157 @@ local function CreateCard(parent, title)
     return Card
 end
 
+-- ==========================================
+-- СИСТЕМА БИНДОВ И ОТОБРАЖАТЕЛЬ НА ЭКРАНЕ
+-- ==========================================
+local ActiveBindsUI = {}
+
+local KeybindsDisplay = Instance.new("Frame", ScreenGui)
+KeybindsDisplay.Name = "VortexKeybindsList"
+KeybindsDisplay.Size = UDim2.new(0, 160, 0, 150)
+KeybindsDisplay.Position = UDim2.new(0.02, 0, 0.25, 0)
+KeybindsDisplay.BackgroundColor3 = SidebarDark
+KeybindsDisplay.BorderSizePixel = 0
+KeybindsDisplay.Visible = false -- Включается в визуалах
+Instance.new("UICorner", KeybindsDisplay).CornerRadius = UDim.new(0, 6)
+
+local KbStroke = Instance.new("UIStroke", KeybindsDisplay)
+KbStroke.Color = AccentColor
+KbStroke.Thickness = 1
+KbStroke.Transparency = 0.5
+
+local KbHeader = Instance.new("TextLabel", KeybindsDisplay)
+KbHeader.Size = UDim2.new(1, 0, 0, 25)
+KbHeader.BackgroundTransparency = 1
+KbHeader.Font = Enum.Font.GothamBold
+KbHeader.Text = "  Keybinds"
+KbHeader.TextColor3 = AccentColor
+KbHeader.TextSize = 11
+KbHeader.TextXAlignment = Enum.TextXAlignment.Left
+
+local KbContainer = Instance.new("Frame", KeybindsDisplay)
+KbContainer.Size = UDim2.new(1, 0, 1, -25)
+KbContainer.Position = UDim2.new(0, 0, 0, 25)
+KbContainer.BackgroundTransparency = 1
+local KbLayout = Instance.new("UIListLayout", KbContainer)
+KbLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Перетаскивание списка биндов мышкой
+local draggingKb, dragStartKb, startPosKb
+KeybindsDisplay.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingKb = true dragStartKb = input.Position startPosKb = KeybindsDisplay.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingKb and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStartKb
+        KeybindsDisplay.Position = UDim2.new(startPosKb.X.Scale, startPos.X.Offset + delta.X, startPosKb.Y.Scale, startPosKb.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
+end)
+
+local function UpdateKeybindsUI(name, keyName, state)
+    local label = ActiveBindsUI[name]
+    if state then
+        if not label then
+            label = Instance.new("TextLabel", KbContainer)
+            label.Size = UDim2.new(1, 0, 0, 18)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextColor3 = TextMain
+            label.TextSize = 10
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            ActiveBindsUI[name] = label
+        end
+        label.Text = "  [ " .. keyName .. " ] " .. name
+    else
+        if label then
+            label:Destroy()
+            ActiveBindsUI[name] = nil
+        end
+    end
+end
+
+-- ==========================================
+-- ИЗМЕНЕННЫЙ CREATE TOGGLE С КОЛЕСИКОМ МЫШИ (MouseButton3)
+-- ==========================================
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
+    
+    local ClickZone = Instance.new("TextButton", Toggle)
+    ClickZone.Size = UDim2.new(1, 0, 1, 0) ClickZone.BackgroundTransparency = 1 ClickZone.Text = "" ClickZone.ZIndex = 2
+
     local Label = Instance.new("TextLabel", Toggle)
-    Label.Size = UDim2.new(0.7, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
+    Label.Size = UDim2.new(0.6, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
     Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
-    local Switch = Instance.new("TextButton", Toggle)
+
+    -- Полупрозрачная буква бинда справа от функции
+    local BindLabel = Instance.new("TextLabel", Toggle)
+    BindLabel.Size = UDim2.new(0, 50, 1, 0) BindLabel.Position = UDim2.new(1, -70, 0, 0)
+    BindLabel.BackgroundTransparency = 1 BindLabel.Font = Enum.Font.Gotham
+    BindLabel.Text = "[None]" BindLabel.TextColor3 = TextMuted BindLabel.TextTransparency = 0.5
+    BindLabel.TextSize = 10 BindLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+    local Switch = Instance.new("Frame", Toggle)
     Switch.Size = UDim2.new(0, 14, 0, 14) Switch.Position = UDim2.new(1, -14, 0.5, -7)
-    Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0 Switch.Text = ""
+    Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0
     Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 3)
 
     if default then RegisterThemeObject(Switch, "BackgroundColor3") end
 
     local state = default
-    Switch.MouseButton1Click:Connect(function()
-        state = not state
+    local assignedKey = nil
+    local isBinding = false
+
+    local function ApplyState(newState)
+        state = newState
         Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 45, 55)
         if state then RegisterThemeObject(Switch, "BackgroundColor3") end
         callback(state)
+        if assignedKey then
+            UpdateKeybindsUI(text, assignedKey.Name, state)
+        end
+    end
+
+    ClickZone.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if not isBinding then
+                ApplyState(not state)
+            end
+        elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
+            -- Клик колесиком мыши для назначения бинда
+            isBinding = true
+            BindLabel.Text = "[...]"
+            
+            local connection
+            connection = UserInputService.InputBegan:Connect(function(keyInput)
+                if keyInput.UserInputType == Enum.UserInputType.Keyboard then
+                    local key = keyInput.KeyCode
+                    if key == Enum.KeyCode.Backspace or key == Enum.KeyCode.Escape then
+                        assignedKey = nil
+                        BindLabel.Text = "[None]"
+                        UpdateKeybindsUI(text, "", false)
+                    else
+                        assignedKey = key
+                        BindLabel.Text = "[" .. key.Name .. "]"
+                        UpdateKeybindsUI(text, key.Name, state)
+                    end
+                    isBinding = false
+                    connection:Disconnect()
+                end
+            end)
+        end
+    end)
+
+    -- Глобальный слушатель нажатия буквы для этой функции
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if assignedKey and input.KeyCode == assignedKey and not isBinding then
+            ApplyState(not state)
+        end
     end)
 end
 
@@ -668,6 +802,12 @@ CreateSlider(ESPCard, "Ring Size", 5, 40, 15, function(v) Config.RingSize = v en
 CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
+
+-- Кнопка включения отображателя биндов в разделе Визуалы
+local BindMenuCard = CreateCard(VisualsR, "Keybinds UI")
+CreateToggle(BindMenuCard, "Show Keybinds List", false, function(v)
+    KeybindsDisplay.Visible = v
+end)
 
 local ThemePresetCardL = CreateCard(ThemesL, "Presets Side A")
 CreateButton(ThemePresetCardL, "Theme: Pure White (Default)", function() ApplyTheme(PresetThemes.White) end)
