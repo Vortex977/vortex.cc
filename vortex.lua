@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with Keybinds & Fixed Tracers
+    Vortex Hub // Region of Violence (VD) - Complete Edition with Dedicated Binds Tab
     Author: TWKS
 ]]--
 
@@ -637,7 +637,7 @@ local function CreateCard(parent, title)
     return Card
 end
 
--- СИСТЕМА ТОГГЛОВ С БИНДАМИ И ВЫБОРОМ РЕЖИМА (Toggle / Hold)
+-- СИСТЕМА TOGGLE С НАЗНАЧЕНИЕМ БИНДА ЧЕРЕЗ КЛИК КОЛЕСИКОМ МЫШИ (ТОЛЬКО НАЖАТИЕ / TOGGLE)
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     
@@ -645,17 +645,11 @@ local function CreateToggle(card, text, default, callback)
     ClickZone.Size = UDim2.new(1, 0, 1, 0) ClickZone.BackgroundTransparency = 1 ClickZone.Text = "" ClickZone.ZIndex = 2
 
     local Label = Instance.new("TextLabel", Toggle)
-    Label.Size = UDim2.new(0.5, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
+    Label.Size = UDim2.new(0.65, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
     Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
 
-    local ModeBtn = Instance.new("TextButton", Toggle)
-    ModeBtn.Size = UDim2.new(0, 36, 0, 14) ModeBtn.Position = UDim2.new(1, -100, 0.5, -7)
-    ModeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45) ModeBtn.BorderSizePixel = 0
-    ModeBtn.Font = Enum.Font.GothamBold ModeBtn.Text = "Toggle" ModeBtn.TextColor3 = TextMuted ModeBtn.TextSize = 8
-    Instance.new("UICorner", ModeBtn).CornerRadius = UDim.new(0, 3)
-
     local BindLabel = Instance.new("TextLabel", Toggle)
-    BindLabel.Size = UDim2.new(0, 40, 1, 0) BindLabel.Position = UDim2.new(1, -58, 0, 0)
+    BindLabel.Size = UDim2.new(0, 50, 1, 0) BindLabel.Position = UDim2.new(1, -70, 0, 0)
     BindLabel.BackgroundTransparency = 1 BindLabel.Font = Enum.Font.Gotham
     BindLabel.Text = "[None]" BindLabel.TextColor3 = TextMuted BindLabel.TextTransparency = 0.5
     BindLabel.TextSize = 10 BindLabel.TextXAlignment = Enum.TextXAlignment.Right
@@ -670,19 +664,6 @@ local function CreateToggle(card, text, default, callback)
     local state = default
     local assignedKey = nil
     local isBinding = false
-    local bindMode = "Toggle"
-
-    ModeBtn.MouseButton1Click:Connect(function()
-        if bindMode == "Toggle" then
-            bindMode = "Hold"
-            ModeBtn.Text = "Hold"
-            ModeBtn.TextColor3 = AccentColor
-        else
-            bindMode = "Toggle"
-            ModeBtn.Text = "Toggle"
-            ModeBtn.TextColor3 = TextMuted
-        end
-    end)
 
     local function ApplyState(newState)
         if state == newState then return end
@@ -724,23 +705,11 @@ local function CreateToggle(card, text, default, callback)
         end
     end)
 
+    -- Срабатывание бинда только на нажатие (переключение)
     UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe or not assignedKey or isBinding then return end
         if input.KeyCode == assignedKey then
-            if bindMode == "Toggle" then
-                ApplyState(not state)
-            elseif bindMode == "Hold" then
-                ApplyState(true)
-            end
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if not assignedKey or isBinding then return end
-        if input.KeyCode == assignedKey then
-            if bindMode == "Hold" then
-                ApplyState(false)
-            end
+            ApplyState(not state)
         end
     end)
 end
@@ -787,7 +756,8 @@ end
 
 local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
 local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
-local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 3)
+local BindsL, BindsR, BindsTabBtn = CreateTab("Binds", 3) -- НОВАЯ ОТДЕЛЬНАЯ КАТЕГОРИЯ ДЛЯ БИНДОВ
+local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 4)
 
 local SurvivorCard = CreateCard(MainL, "Survivor Side")
 CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
@@ -819,13 +789,14 @@ CreateToggle(ESPCard, "White Tracers: Players", false, function(v) Config.Tracer
 CreateToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
 CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
 CreateToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
-CreateToggle(ESPCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
+CreateToggle(ESPCCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
 CreateSlider(ESPCard, "Ring Size", 5, 40, 15, function(v) Config.RingSize = v end)
 CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
-local BindMenuCard = CreateCard(VisualsR, "Keybinds UI")
+-- НАСТРОЙКИ В НОВОЙ ВКЛАДКЕ "Binds"
+local BindMenuCard = CreateCard(BindsL, "Keybinds UI Display")
 CreateToggle(BindMenuCard, "Show Keybinds List", false, function(v)
     KeybindsDisplay.Visible = v
 end)
