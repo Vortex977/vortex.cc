@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Ultimate Complete Edition with Portal Teleport
+    Vortex Hub // Region of Violence (VD) - Ultimate Complete Edition
     Author: TWKS
 ]]--
 
@@ -264,11 +264,9 @@ local Config = {
     SpinSpeed = 50,
     Crosshair = false,
     
-    -- Портал-телепорт
-    PortalTeleportEnabled = false,
+    PortalTeleport = false,
     PortalKey = nil,
     
-    -- Кастомные цвета ESP
     KillerESPColor = Color3.fromRGB(180, 60, 60),
     PlayerESPColor = Color3.fromRGB(255, 255, 255),
     GeneratorESPColor = Color3.fromRGB(255, 255, 255),
@@ -676,13 +674,12 @@ local function CreateToggle(card, text, default, callback)
                         assignedKey = nil
                         BindLabel.Text = "[None]"
                         UpdateKeybindsUI(text, "", false)
+                        if text == "Portal Teleport" then Config.PortalKey = nil end
                     else
                         assignedKey = key
                         BindLabel.Text = "[" .. key.Name .. "]"
                         UpdateKeybindsUI(text, key.Name, true)
-                        if text == "Portal Teleport" then
-                            Config.PortalKey = key
-                        end
+                        if text == "Portal Teleport" then Config.PortalKey = key end
                     end
                     isBinding = false
                     connection:Disconnect()
@@ -813,7 +810,7 @@ local KillerCard = CreateCard(MainR, "Killer Side")
 CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
 
 local PortalCard = CreateCard(MainR, "Portal Teleport System")
-CreateToggle(PortalCard, "Portal Teleport", false, function(v) Config.PortalTeleportEnabled = v end)
+CreateToggle(PortalCard, "Portal Teleport", false, function(v) Config.PortalTeleport = v end)
 
 local EnvironmentCard = CreateCard(VisualsL, "World Visuals")
 CreateToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
@@ -909,10 +906,9 @@ PortalLight.Brightness = 3
 local function GetRandomMapPosition()
     local mapParts = {}
     for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and not obj.Anchored == false and not obj.Parent:FindFirstChild("Humanoid") then
+        if obj:IsA("BasePart") and obj.Anchored and not obj.Parent:FindFirstChild("Humanoid") then
             local name = string.lower(obj.Name)
             local parentName = string.lower(obj.Parent.Name)
-            -- Исключаем спавн, лобби и неигровые зоны
             if not string.find(name, "spawn") and not string.find(parentName, "spawn") and not string.find(name, "lobby") then
                 table.insert(mapParts, obj)
             end
@@ -924,7 +920,6 @@ local function GetRandomMapPosition()
         return randomPart.Position + Vector3.new(math.random(-15, 15), 4, math.random(-15, 15))
     end
     
-    -- Запасная точка в пределах игровой зоны, если детали не найдены
     return Vector3.new(math.random(-150, 150), 10, math.random(-150, 150))
 end
 
@@ -932,7 +927,6 @@ local function SpawnPortal()
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local root = LocalPlayer.Character.HumanoidRootPart
     
-    -- Спавним портал перед игроком
     local spawnPos = root.Position + (root.CFrame.LookVector * 6) + Vector3.new(0, 2, 0)
     PortalPart.Position = spawnPos
     PortalPart.CFrame = CFrame.new(spawnPos, root.Position)
@@ -948,7 +942,7 @@ local function SpawnPortal()
 end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe or not Config.PortalTeleportEnabled or not Config.PortalKey then return end
+    if gpe or not Config.PortalTeleport or not Config.PortalKey then return end
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Config.PortalKey then
         SpawnPortal()
     end
