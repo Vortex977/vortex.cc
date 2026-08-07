@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Ultimate Complete Edition
+    Vortex Hub // Region of Violence (VD) - Ultimate Complete Edition with Portal Teleport
     Author: TWKS
 ]]--
 
@@ -263,6 +263,10 @@ local Config = {
     VisualSpin = false,
     SpinSpeed = 50,
     Crosshair = false,
+    
+    -- Портал-телепорт
+    PortalTeleportEnabled = false,
+    PortalKey = nil,
     
     -- Кастомные цвета ESP
     KillerESPColor = Color3.fromRGB(180, 60, 60),
@@ -676,6 +680,9 @@ local function CreateToggle(card, text, default, callback)
                         assignedKey = key
                         BindLabel.Text = "[" .. key.Name .. "]"
                         UpdateKeybindsUI(text, key.Name, true)
+                        if text == "Portal Teleport" then
+                            Config.PortalKey = key
+                        end
                     end
                     isBinding = false
                     connection:Disconnect()
@@ -805,6 +812,9 @@ CreateToggle(SurvivorCard, "Auto Dagger Counter Stun", false, function(v) Config
 local KillerCard = CreateCard(MainR, "Killer Side")
 CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
 
+local PortalCard = CreateCard(MainR, "Portal Teleport System")
+CreateToggle(PortalCard, "Portal Teleport", false, function(v) Config.PortalTeleportEnabled = v end)
+
 local EnvironmentCard = CreateCard(VisualsL, "World Visuals")
 CreateToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
 CreateToggle(EnvironmentCard, "Remove Fog", false, function(v) Config.NoFog = v end)
@@ -879,7 +889,72 @@ local function updateTriangleRing(enabled, count, radius, color)
     end
 end
 
--- РАБОЧИЙ AUTO DAGGER (клик правой кнопкой мыши по таймингу удара киллера вплотную)
+-- ПОРТАЛ-ТЕЛЕПОРТ В ЛЮБУЮ ТОЧКУ КАРТЫ (КРОМЕ СПАВНА)
+local PortalPart = Instance.new("Part")
+PortalPart.Name = "VortexPortal"
+PortalPart.Size = Vector3.new(4, 7, 1)
+PortalPart.Anchored = true
+PortalPart.CanCollide = false
+PortalPart.Material = Enum.Material.Neon
+PortalPart.Color = AccentColor
+PortalPart.Transparency = 0.3
+PortalPart.Parent = Workspace
+PortalPart.Visible = false
+
+local PortalLight = Instance.new("PointLight", PortalPart)
+PortalLight.Color = AccentColor
+PortalLight.Range = 12
+PortalLight.Brightness = 3
+
+local function GetRandomMapPosition()
+    local mapParts = {}
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj.Anchored == false and not obj.Parent:FindFirstChild("Humanoid") then
+            local name = string.lower(obj.Name)
+            local parentName = string.lower(obj.Parent.Name)
+            -- Исключаем спавн, лобби и неигровые зоны
+            if not string.find(name, "spawn") and not string.find(parentName, "spawn") and not string.find(name, "lobby") then
+                table.insert(mapParts, obj)
+            end
+        end
+    end
+    
+    if #mapParts > 0 then
+        local randomPart = mapParts[math.random(1, #mapParts)]
+        return randomPart.Position + Vector3.new(math.random(-15, 15), 4, math.random(-15, 15))
+    end
+    
+    -- Запасная точка в пределах игровой зоны, если детали не найдены
+    return Vector3.new(math.random(-150, 150), 10, math.random(-150, 150))
+end
+
+local function SpawnPortal()
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    local root = LocalPlayer.Character.HumanoidRootPart
+    
+    -- Спавним портал перед игроком
+    local spawnPos = root.Position + (root.CFrame.LookVector * 6) + Vector3.new(0, 2, 0)
+    PortalPart.Position = spawnPos
+    PortalPart.CFrame = CFrame.new(spawnPos, root.Position)
+    PortalPart.Visible = true
+    
+    task.spawn(function()
+        task.wait(0.3)
+        local destPos = GetRandomMapPosition()
+        root.CFrame = CFrame.new(destPos)
+        task.wait(0.5)
+        PortalPart.Visible = false
+    end)
+end
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe or not Config.PortalTeleportEnabled or not Config.PortalKey then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Config.PortalKey then
+        SpawnPortal()
+    end
+end)
+
+-- РАБОЧИЙ AUTO DAGGER
 local function ListenToKillerAttacks(killerChar)
     local hum = killerChar:FindFirstChildOfClass("Humanoid")
     if not hum or hum:GetAttribute("VortexHooked") then return end
