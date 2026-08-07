@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Final Edition
+    Vortex Hub // Region of Violence (VD) - Customizable ESP Edition
     Author: TWKS
 ]]--
 
@@ -231,7 +231,7 @@ end)
 
 repeat task.wait(0.1) until KeyAuthGranted == true
 
--- Config
+-- Config с поддержкой кастомных цветов ESP
 local Config = {
     AutoSkillCheck = true,
     NoClip = false,
@@ -255,6 +255,7 @@ local Config = {
     KillerESP = false,
     PalletESP = false,
     GeneratorESP = false,
+    WindowESP = false, -- Новое: подсветка окон/дверей
     TracersPlayers = false,
     TracersKiller = false,
     TriangleRingEnabled = false,
@@ -263,11 +264,16 @@ local Config = {
     VisualSpin = false,
     SpinSpeed = 50,
     Crosshair = false,
-    KillerESPColor = Color3.fromRGB(200, 50, 50), -- Неяркий красный для киллера
-    PalletESPColor = Color3.fromRGB(200, 200, 200)
+    
+    -- Настраиваемые цвета (по умолчанию неяркий красный для киллера, остальные под тему/палитру)
+    KillerESPColor = Color3.fromRGB(180, 60, 60),
+    PlayerESPColor = Color3.fromRGB(255, 255, 255),
+    GeneratorESPColor = Color3.fromRGB(255, 255, 255),
+    PalletESPColor = Color3.fromRGB(200, 200, 200),
+    WindowESPColor = Color3.fromRGB(100, 200, 255)
 }
 
-local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
+local Cache = { Generators = {}, Pallets = {}, Windows = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 local ActiveBindsUI = {}
 
 local function TriggerFakeDagger()
@@ -526,7 +532,6 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
 end)
 
--- Отображение всех забиндженных функций в приглушенном (не ярком) виде
 local function UpdateKeybindsUI(name, keyName, hasKey)
     local label = ActiveBindsUI[name]
     if hasKey and keyName ~= "" then
@@ -535,7 +540,7 @@ local function UpdateKeybindsUI(name, keyName, hasKey)
             label.Size = UDim2.new(1, 0, 0, 18)
             label.BackgroundTransparency = 1
             label.Font = Enum.Font.Gotham
-            label.TextColor3 = Color3.fromRGB(130, 130, 140) -- Темноватый приглушенный цвет
+            label.TextColor3 = Color3.fromRGB(130, 130, 140)
             label.TextSize = 10
             label.TextXAlignment = Enum.TextXAlignment.Left
             ActiveBindsUI[name] = label
@@ -638,7 +643,6 @@ local function CreateCard(parent, title)
     return Card
 end
 
--- СИСТЕМА TOGGLE С БИНДОМ ЧЕРЕЗ КЛИК КОЛЕСИКОМ МЫШИ (MouseButton3)
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     
@@ -708,6 +712,62 @@ local function CreateToggle(card, text, default, callback)
         if input.KeyCode == assignedKey then
             ApplyState(not state)
         end
+    end)
+end
+
+-- Функция выбора цвета для ESP
+local function CreateColorPicker(card, text, currentColor, callback)
+    local CpFrame = Instance.new("Frame", card) CpFrame.Size = UDim2.new(1, 0, 0, 22) CpFrame.BackgroundTransparency = 1
+    
+    local Label = Instance.new("TextLabel", CpFrame)
+    Label.Size = UDim2.new(0.7, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
+    Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local ColorBtn = Instance.new("TextButton", CpFrame)
+    ColorBtn.Size = UDim2.new(0, 30, 0, 14) ColorBtn.Position = UDim2.new(1, -30, 0.5, -7)
+    ColorBtn.BackgroundColor3 = currentColor ColorBtn.BorderSizePixel = 0 ColorBtn.Text = ""
+    Instance.new("UICorner", ColorBtn).CornerRadius = UDim.new(0, 3)
+
+    -- Маленькое меню выбора цвета при клике
+    local PickerPopup = Instance.new("Frame", ScreenGui)
+    PickerPopup.Size = UDim2.new(0, 130, 0, 95)
+    PickerPopup.BackgroundColor3 = SidebarDark
+    PickerPopup.BorderSizePixel = 0
+    PickerPopup.Visible = false
+    PickerPopup.ZIndex = 600
+    Instance.new("UICorner", PickerPopup).CornerRadius = UDim.new(0, 6)
+    local PopStroke = Instance.new("UIStroke", PickerPopup) PopStroke.Color = AccentColor PopStroke.Thickness = 1
+
+    local pLayout = Instance.new("UIGridLayout", PickerPopup)
+    pLayout.CellSize = UDim2.new(0, 34, 0, 20) pLayout.CellPadding = UDim2.new(0, 6, 0, 6)
+    pLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local pPadding = Instance.new("UIPadding", PickerPopup)
+    pPadding.PaddingTop = UDim.new(0, 10) pPadding.PaddingLeft = UDim.new(0, 10)
+
+    local colors = {
+        Color3.fromRGB(255, 50, 50),
+        Color3.fromRGB(0, 255, 120),
+        Color3.fromRGB(0, 225, 255),
+        Color3.fromRGB(170, 0, 255),
+        Color3.fromRGB(255, 255, 255),
+        Color3.fromRGB(255, 150, 0)
+    }
+
+    for _, col in ipairs(colors) do
+        local cBtn = Instance.new("TextButton", PickerPopup)
+        cBtn.BackgroundColor3 = col cBtn.BorderSizePixel = 0 cBtn.Text = ""
+        Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 4)
+        cBtn.MouseButton1Click:Connect(function()
+            ColorBtn.BackgroundColor3 = col
+            PickerPopup.Visible = false
+            callback(col)
+        end)
+    end
+
+    ColorBtn.MouseButton1Click:Connect(function()
+        PickerPopup.Position = UDim2.new(0, ColorBtn.AbsolutePosition.X - 50, 0, ColorBtn.AbsolutePosition.Y + 20)
+        PickerPopup.Visible = not PickerPopup.Visible
     end)
 end
 
@@ -781,11 +841,22 @@ CreateSlider(EnvironmentCard, "FOV Value", 70, 120, 90, function(v) Config.FOVVa
 
 local ESPCard = CreateCard(VisualsR, "ESP & Tracers")
 CreateToggle(ESPCard, "Player ESP", false, function(v) Config.PlayerESP = v end)
+CreateColorPicker(ESPCard, "Player ESP Color", Config.PlayerESPColor, function(c) Config.PlayerESPColor = c end)
+
 CreateToggle(ESPCard, "Killer ESP", false, function(v) Config.KillerESP = v end)
+CreateColorPicker(ESPCard, "Killer ESP Color", Config.KillerESPColor, function(c) Config.KillerESPColor = c end)
+
+CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
+CreateColorPicker(ESPCard, "Generator Color", Config.GeneratorESPColor, function(c) Config.GeneratorESPColor = c end)
+
+CreateToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
+CreateColorPicker(ESPCard, "Pallet Color", Config.PalletESPColor, function(c) Config.PalletESPColor = c end)
+
+CreateToggle(ESPCard, "Window / Door ESP", false, function(v) Config.WindowESP = v end)
+CreateColorPicker(ESPCard, "Window Color", Config.WindowESPColor, function(c) Config.WindowESPColor = c end)
+
 CreateToggle(ESPCard, "White Tracers: Players", false, function(v) Config.TracersPlayers = v end)
 CreateToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
-CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
-CreateToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
 CreateToggle(ESPCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
 CreateSlider(ESPCard, "Ring Size", 5, 40, 15, function(v) Config.RingSize = v end)
 CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
@@ -868,7 +939,6 @@ local function ListenToKillerAttacks(killerChar)
     end)
 end
 
--- ИСПРАВЛЕННЫЕ РОВНЫЕ ТРАЙСЕРЫ
 local TracersFolder = Instance.new("Folder", ScreenGui) 
 TracersFolder.Name = "VortexTracers"
 local tracerLines = {}
@@ -907,12 +977,13 @@ local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c
 
 task.spawn(function()
     while task.wait(3) do
-        local tempGens, tempPallets, tempKillers, tempPlayers = {}, {}, {}, {}
+        local tempGens, tempPallets, tempWindows, tempKillers, tempPlayers = {}, {}, {}, {}, {}
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("Model") then
                 local name = string.lower(obj.Name)
                 if string.find(name, "generator") then table.insert(tempGens, obj)
-                elseif string.find(name, "pallet") then table.insert(tempPallets, obj) end
+                elseif string.find(name, "pallet") then table.insert(tempPallets, obj)
+                elseif string.find(name, "window") or string.find(name, "door") then table.insert(tempWindows, obj) end
             end
         end
         for _, p in ipairs(Players:GetPlayers()) do
@@ -922,7 +993,7 @@ task.spawn(function()
                 if isKiller then table.insert(tempKillers, char) else table.insert(tempPlayers, char) end
             end
         end
-        Cache.Generators, Cache.Pallets, Cache.KillersList, Cache.PlayersList = tempGens, tempPallets, tempKillers, tempPlayers
+        Cache.Generators, Cache.Pallets, Cache.Windows, Cache.KillersList, Cache.PlayersList = tempGens, tempPallets, tempWindows, tempKillers, tempPlayers
     end
 end)
 
@@ -1037,11 +1108,16 @@ RunService.RenderStepped:Connect(function(dt)
     if throttleTimer >= 0.15 then
         throttleTimer = 0
 
+        -- Киллер: менее яркая приглушенная обводка (FillTransparency = 0.6)
         for _, char in ipairs(Cache.KillersList) do
             local hl = char:FindFirstChild("VDHighlight")
             if Config.KillerESP then
                 if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
-                hl.Adornee = char hl.FillColor = Config.KillerESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.OutlineTransparency = 0.1 hl.FillTransparency = 0.35
+                hl.Adornee = char 
+                hl.FillColor = Config.KillerESPColor 
+                hl.OutlineColor = Color3.fromRGB(255, 255, 255) 
+                hl.OutlineTransparency = 0.2 
+                hl.FillTransparency = 0.6
             else
                 if hl then hl:Destroy() end
             end
@@ -1052,7 +1128,7 @@ RunService.RenderStepped:Connect(function(dt)
             local hl = char:FindFirstChild("VDHighlight")
             if Config.PlayerESP then
                 if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
-                hl.Adornee = char hl.FillColor = AccentColor hl.OutlineColor = AccentColor hl.OutlineTransparency = 1 hl.FillTransparency = 0.35
+                hl.Adornee = char hl.FillColor = Config.PlayerESPColor hl.OutlineColor = Config.PlayerESPColor hl.OutlineTransparency = 1 hl.FillTransparency = 0.35
             else
                 if hl then hl:Destroy() end
             end
@@ -1062,7 +1138,9 @@ RunService.RenderStepped:Connect(function(dt)
             for _, gen in ipairs(Cache.Generators) do
                 if not gen:FindFirstChild("GenHL") then
                     local hl = Instance.new("Highlight", gen) hl.Name = "GenHL" hl.Adornee = gen
-                    hl.FillColor = AccentColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
+                    hl.FillColor = Config.GeneratorESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
+                else
+                    gen.GenHL.FillColor = Config.GeneratorESPColor
                 end
             end
         else
@@ -1073,11 +1151,26 @@ RunService.RenderStepped:Connect(function(dt)
             for _, pal in ipairs(Cache.Pallets) do
                 if not pal:FindFirstChild("PalletHL") then
                     local hl = Instance.new("Highlight", pal) hl.Name = "PalletHL" hl.Adornee = pal
-                    hl.FillColor = AccentColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
+                    hl.FillColor = Config.PalletESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
+                else
+                    pal.PalletHL.FillColor = Config.PalletESPColor
                 end
             end
         else
             for _, pal in ipairs(Cache.Pallets) do local hl = pal:FindFirstChild("PalletHL") if hl then hl:Destroy() end end
+        end
+
+        if Config.WindowESP then
+            for _, win in ipairs(Cache.Windows) do
+                if not win:FindFirstChild("WinHL") then
+                    local hl = Instance.new("Highlight", win) hl.Name = "WinHL" hl.Adornee = win
+                    hl.FillColor = Config.WindowESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
+                else
+                    win.WinHL.FillColor = Config.WindowESPColor
+                end
+            end
+        else
+            for _, win in ipairs(Cache.Windows) do local hl = win:FindFirstChild("WinHL") if hl then hl:Destroy() end end
         end
     end
 end)
