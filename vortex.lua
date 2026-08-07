@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with Mode Select & Fixed Tracers
+    Vortex Hub // Region of Violence (VD) - Complete Edition
     Author: TWKS
 ]]--
 
@@ -270,7 +270,6 @@ local Config = {
 local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 local ActiveBindsUI = {}
 
--- FAKE DAGGER ФУНКЦИЯ
 local function TriggerFakeDagger()
     if not LocalPlayer.Character then return end
     local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
@@ -293,7 +292,6 @@ local function TriggerFakeDagger()
     end
 end
 
--- FLOWSTATE ФУНКЦИЯ
 local function ProcessFlowstate()
     if not Config.Flowstate then return end
     local char = LocalPlayer.Character
@@ -311,7 +309,6 @@ local function ProcessFlowstate()
     end
 end
 
--- INFINITE FLASHLIGHT ФУНКЦИЯ
 local function ProcessInfiniteFlashlight()
     if not Config.InfiniteFlashlight then return end
     local char = LocalPlayer.Character
@@ -640,9 +637,7 @@ local function CreateCard(parent, title)
     return Card
 end
 
--- ==========================================
--- ИЗМЕНЕННЫЙ CREATE TOGGLE (БИНД С ВЫБОРОМ РЕЖИМА: Toggle / Hold)
--- ==========================================
+-- СИСТЕМА TOGGLE + ВЫБОР РЕЖИМА БИНДА (Toggle / Hold)
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     
@@ -653,14 +648,12 @@ local function CreateToggle(card, text, default, callback)
     Label.Size = UDim2.new(0.5, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
     Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Кнопка выбора режима работы бинда (Toggle / Hold) справа от названия
     local ModeBtn = Instance.new("TextButton", Toggle)
     ModeBtn.Size = UDim2.new(0, 36, 0, 14) ModeBtn.Position = UDim2.new(1, -100, 0.5, -7)
     ModeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45) ModeBtn.BorderSizePixel = 0
     ModeBtn.Font = Enum.Font.GothamBold ModeBtn.Text = "Toggle" ModeBtn.TextColor3 = TextMuted ModeBtn.TextSize = 8
     Instance.new("UICorner", ModeBtn).CornerRadius = UDim.new(0, 3)
 
-    -- Полупрозрачная буква бинда
     local BindLabel = Instance.new("TextLabel", Toggle)
     BindLabel.Size = UDim2.new(0, 40, 1, 0) BindLabel.Position = UDim2.new(1, -58, 0, 0)
     BindLabel.BackgroundTransparency = 1 BindLabel.Font = Enum.Font.Gotham
@@ -677,7 +670,7 @@ local function CreateToggle(card, text, default, callback)
     local state = default
     local assignedKey = nil
     local isBinding = false
-    local bindMode = "Toggle" -- "Toggle" или "Hold"
+    local bindMode = "Toggle"
 
     ModeBtn.MouseButton1Click:Connect(function()
         if bindMode == "Toggle" then
@@ -731,7 +724,6 @@ local function CreateToggle(card, text, default, callback)
         end
     end)
 
-    -- Обработка нажатий и удержания клавиши
     UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe or not assignedKey or isBinding then return end
         if input.KeyCode == assignedKey then
@@ -909,9 +901,7 @@ local function ListenToKillerAttacks(killerChar)
     end)
 end
 
--- ==========================================
--- ИСПРАВЛЕННЫЕ И РОВНЫЕ ТРАЙСЕРА (ИСПРАВЛЕНА МАТЕМАТИКА ОРИЕНТАЦИИ И РАЗМЕРОВ)
--- ==========================================
+-- ИСПРАВЛЕННЫЕ РОВНЫЕ ТРАЙСЕРЫ
 local TracersFolder = Instance.new("Folder", ScreenGui) 
 TracersFolder.Name = "VortexTracers"
 local tracerLines = {}
@@ -930,7 +920,6 @@ local function DrawWhiteTracer(targetPos, index)
         end
         line.Visible = true
         
-        -- Начальная точка — центр нижней части экрана
         local startPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
         local endPos = Vector2.new(screenPos.X, screenPos.Y)
         local distance = (endPos - startPos).Magnitude
@@ -1012,8 +1001,6 @@ local function ProcessSkillCheckFast()
         end
     end
 end
-
-RunService.Heartbeat:Context = function() end
 
 RunService.Heartbeat:Connect(function()
     ProcessSkillCheckFast()
@@ -1097,7 +1084,7 @@ RunService.RenderStepped:Connect(function(dt)
         for _, char in ipairs(Cache.PlayersList) do
             local hl = char:FindFirstChild("VDHighlight")
             if Config.PlayerESP then
-                if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight`" end
+                if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
                 hl.Adornee = char hl.FillColor = AccentColor hl.OutlineColor = AccentColor hl.OutlineTransparency = 1 hl.FillTransparency = 0.35
             else
                 if hl then hl:Destroy() end
@@ -1106,8 +1093,7 @@ RunService.RenderStepped:Connect(function(dt)
 
         if Config.GeneratorESP then
             for _, gen in ipairs(Cache.Generators) do
-                if not gen:FindFirstChild("GenHL")
-                then
+                if not gen:FindFirstChild("GenHL") then
                     local hl = Instance.new("Highlight", gen) hl.Name = "GenHL" hl.Adornee = gen
                     hl.FillColor = AccentColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
                 end
