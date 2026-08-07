@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Ultimate Complete Edition
+    Vortex Hub // Region of Violence (VD) - Ultimate Fixed Edition
     Author: TWKS
 ]]--
 
@@ -8,50 +8,12 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
-local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local HttpService = game:GetService("HttpService")
-local AnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
-
-local HWID = "UNKNOWN-PC"
-pcall(function() HWID = AnalyticsService:GetClientId() end)
-
-local function GetNetworkTime()
-    local success, result = pcall(function()
-        local response = game:HttpGet("http://worldtimeapi.org/api/timezone/Etc/UTC")
-        local data = HttpService:JSONDecode(response)
-        return data.unixtime
-    end)
-    if success and result then return result else return os.time() end
-end
-
-local ValidKeys = {
-    ["VORTEX-1D-01A9"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-02B4"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-03C7"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-04D2"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-05E8"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-06F1"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-07G5"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-08H9"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-09J3"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-10K6"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-30D-A101"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-B202"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-C303"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-D404"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-E505"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-F606"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-G707"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-H808"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-J909"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-K010"] = { Duration = 2592000, BoundHWID = nil },
-    ["admin2013"] = { Duration = 999999999, BoundHWID = nil }
-}
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local PresetThemes = {
     White = Color3.fromRGB(255, 255, 255),
@@ -70,166 +32,15 @@ local CardDark = Color3.fromRGB(28, 28, 34)
 local TextMain = Color3.fromRGB(255, 255, 255)
 local TextMuted = Color3.fromRGB(160, 160, 170)
 
+-- Безопасное создание интерфейса в PlayerGui
+local oldGui = PlayerGui:FindFirstChild("VortexHubComplete")
+if oldGui then oldGui:Destroy() end
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VortexHubComplete"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-pcall(function() ScreenGui.Parent = CoreGui end)
-if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-
--- LOADING SCREEN
-local LoadingFrame = Instance.new("Frame", ScreenGui)
-LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
-LoadingFrame.BackgroundColor3 = BgDark
-LoadingFrame.BorderSizePixel = 0
-LoadingFrame.ZIndex = 1000
-
-local LoadingBox = Instance.new("Frame", LoadingFrame)
-LoadingBox.Size = UDim2.new(0, 460, 0, 190)
-LoadingBox.Position = UDim2.new(0.5, -230, 0.5, -95)
-LoadingBox.BackgroundColor3 = SidebarDark
-LoadingBox.BorderSizePixel = 0
-Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 10)
-
-local BoxGlow = Instance.new("UIStroke", LoadingBox)
-BoxGlow.Color = AccentColor
-BoxGlow.Thickness = 1.2
-BoxGlow.Transparency = 0.5
-
-local LoadingTitle = Instance.new("TextLabel", LoadingBox)
-LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
-LoadingTitle.Position = UDim2.new(0, 0, 0, 28)
-LoadingTitle.BackgroundTransparency = 1
-LoadingTitle.Font = Enum.Font.GothamBold
-LoadingTitle.Text = "VORTEX ENGINE // COMPLETE"
-LoadingTitle.TextColor3 = AccentColor
-LoadingTitle.TextSize = 14
-
-local LoadingSub = Instance.new("TextLabel", LoadingBox)
-LoadingSub.Size = UDim2.new(1, 0, 0, 20)
-LoadingSub.Position = UDim2.new(0, 0, 0, 58)
-LoadingSub.BackgroundTransparency = 1
-LoadingSub.Font = Enum.Font.Code
-LoadingSub.Text = "INITIALIZING ALL FEATURES..."
-LoadingSub.TextColor3 = TextMuted
-LoadingSub.TextSize = 10
-
-local BarBg = Instance.new("Frame", LoadingBox)
-BarBg.Size = UDim2.new(0, 380, 0, 4)
-BarBg.Position = UDim2.new(0.5, -190, 0.78, 0)
-BarBg.BackgroundColor3 = CardDark
-BarBg.BorderSizePixel = 0
-Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
-
-local BarFill = Instance.new("Frame", BarBg)
-BarFill.Size = UDim2.new(0, 0, 1, 0)
-BarFill.BackgroundColor3 = AccentColor
-BarFill.BorderSizePixel = 0
-Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
-
-TweenService:Create(BarFill, TweenInfo.new(1.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-task.wait(1.3)
-LoadingFrame:Destroy()
-
--- KEY AUTHENTICATION WINDOW
-local KeyAuthGranted = false
-local KeyGui = Instance.new("Frame", ScreenGui)
-KeyGui.Size = UDim2.new(0, 420, 0, 250)
-KeyGui.Position = UDim2.new(0.5, -210, 0.5, -125)
-KeyGui.BackgroundColor3 = SidebarDark
-KeyGui.BorderSizePixel = 0
-KeyGui.ZIndex = 500
-Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 10)
-
-local KeyGlow = Instance.new("UIStroke", KeyGui)
-KeyGlow.Color = AccentColor
-KeyGlow.Thickness = 1.2
-KeyGlow.Transparency = 0.5
-
-local KeyTitle = Instance.new("TextLabel", KeyGui)
-KeyTitle.Size = UDim2.new(1, 0, 0, 35)
-KeyTitle.Position = UDim2.new(0, 0, 0, 20)
-KeyTitle.BackgroundTransparency = 1
-KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.Text = "VORTEX LICENSE SYSTEM"
-KeyTitle.TextColor3 = AccentColor
-KeyTitle.TextSize = 15
-
-local KeySub = Instance.new("TextLabel", KeyGui)
-KeySub.Size = UDim2.new(1, 0, 0, 20)
-KeySub.Position = UDim2.new(0, 0, 0, 52)
-KeySub.BackgroundTransparency = 1
-KeySub.Font = Enum.Font.Gotham
-KeySub.Text = "Hardware-locked security active on this PC"
-KeySub.TextColor3 = TextMuted
-KeySub.TextSize = 10
-
-local KeyBox = Instance.new("TextBox", KeyGui)
-KeyBox.Size = UDim2.new(0, 360, 0, 40)
-KeyBox.Position = UDim2.new(0.5, -180, 0, 90)
-KeyBox.BackgroundColor3 = CardDark
-KeyBox.BorderSizePixel = 0
-KeyBox.PlaceholderText = "Paste your license key here..."
-KeyBox.Text = ""
-KeyBox.TextColor3 = TextMain
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.TextSize = 12
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
-
-local SubmitBtn = Instance.new("TextButton", KeyGui)
-SubmitBtn.Size = UDim2.new(0, 360, 0, 40)
-SubmitBtn.Position = UDim2.new(0.5, -180, 0, 142)
-SubmitBtn.BackgroundColor3 = AccentColor
-SubmitBtn.BorderSizePixel = 0
-SubmitBtn.Font = Enum.Font.GothamBold
-SubmitBtn.Text = "VERIFY & LAUNCH"
-SubmitBtn.TextColor3 = Color3.fromRGB(15, 15, 18)
-SubmitBtn.TextSize = 12
-Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
-
-local KeyStatus = Instance.new("TextLabel", KeyGui)
-KeyStatus.Size = UDim2.new(1, 0, 0, 20)
-KeyStatus.Position = UDim2.new(0, 0, 0, 195)
-KeyStatus.BackgroundTransparency = 1
-KeyStatus.Font = Enum.Font.Gotham
-KeyStatus.Text = "Status: Waiting for license input..."
-KeyStatus.TextColor3 = TextMuted
-KeyStatus.TextSize = 10
-
-SubmitBtn.MouseButton1Click:Connect(function()
-    local inputKey = string.gsub(KeyBox.Text, "%s+", "")
-    local keyData = ValidKeys[inputKey]
-    
-    if keyData then
-        local currentNetworkTime = GetNetworkTime()
-        if keyData.BoundHWID == nil then
-            keyData.BoundHWID = HWID
-            keyData.ExpiresAt = currentNetworkTime + keyData.Duration
-        end
-        if keyData.BoundHWID ~= HWID then
-            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
-            KeyStatus.Text = "ACCESS DENIED: KEY BOUND TO ANOTHER PC"
-            return
-        end
-        if currentNetworkTime > keyData.ExpiresAt then
-            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
-            KeyStatus.Text = "ACCESS DENIED: LICENSE EXPIRED"
-            return
-        end
-
-        KeyAuthGranted = true
-        KeyStatus.TextColor3 = Color3.fromRGB(0, 255, 120)
-        KeyStatus.Text = "AUTHENTICATION SUCCESSFUL!"
-        task.wait(0.4)
-        KeyGui:Destroy()
-    else
-        KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
-        KeyStatus.Text = "ACCESS DENIED: INVALID LICENSE KEY"
-    end
-end)
-
-repeat task.wait(0.1) until KeyAuthGranted == true
+ScreenGui.Parent = PlayerGui
 
 -- Config
 local Config = {
@@ -277,46 +88,7 @@ local Config = {
 local Cache = { Generators = {}, Pallets = {}, Windows = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 local ActiveBindsUI = {}
 
-local function ProcessFlowstate()
-    if not Config.Flowstate then return end
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and (string.find(string.lower(obj.Name), "window") or string.find(string.lower(obj.Name), "glass")) then
-            local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
-            if part then
-                local dist = (part.Position - char.HumanoidRootPart.Position).Magnitude
-                if dist <= 8 then
-                    char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + (char.HumanoidRootPart.CFrame.LookVector * 4)
-                end
-            end
-        end
-    end
-end
-
-local function ProcessInfiniteFlashlight()
-    if not Config.InfiniteFlashlight then return end
-    local char = LocalPlayer.Character
-    if char then
-        for _, item in ipairs(char:GetChildren()) do
-            if item:IsA("Tool") and string.find(string.lower(item.Name), "flashlight") then
-                local battery = item:FindFirstChild("Battery") or item:FindFirstChild("Charge") or item:FindFirstChild("Energy")
-                if battery then battery.Value = 100 end
-            end
-        end
-    end
-    local bp = LocalPlayer:FindFirstChild("Backpack")
-    if bp then
-        for _, item in ipairs(bp:GetChildren()) do
-            if item:IsA("Tool") and string.find(string.lower(item.Name), "flashlight") then
-                local battery = item:FindFirstChild("Battery") or item:FindFirstChild("Charge") or item:FindFirstChild("Energy")
-                if battery then battery.Value = 100 end
-            end
-        end
-    end
-end
-
--- Watermark
+-- Watermark (Кнопка открытия меню)
 local Watermark = Instance.new("TextButton", ScreenGui)
 Watermark.Name = "Watermark"
 Watermark.Size = UDim2.new(0, 160, 0, 26)
@@ -367,7 +139,7 @@ MainMenu.Size = UDim2.new(0, 680, 0, 420)
 MainMenu.Position = UDim2.new(0.5, -340, 0.5, -210)
 MainMenu.BackgroundColor3 = BgDark
 MainMenu.BorderSizePixel = 0
-MainMenu.Visible = false
+MainMenu.Visible = true -- Сразу делаем видимым, чтобы не зависать
 
 Instance.new("UICorner", MainMenu).CornerRadius = UDim.new(0, 8)
 local MenuStroke = Instance.new("UIStroke", MainMenu)
@@ -407,16 +179,9 @@ UserProfile.BackgroundColor3 = CardDark
 UserProfile.BorderSizePixel = 0
 Instance.new("UICorner", UserProfile).CornerRadius = UDim.new(0, 6)
 
-local UserAvatar = Instance.new("ImageLabel", UserProfile)
-UserAvatar.Size = UDim2.new(0, 30, 0, 30)
-UserAvatar.Position = UDim2.new(0, 8, 0.5, -15)
-UserAvatar.BackgroundColor3 = SidebarDark
-pcall(function() UserAvatar.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
-Instance.new("UICorner", UserAvatar).CornerRadius = UDim.new(1, 0)
-
 local UserName = Instance.new("TextLabel", UserProfile)
-UserName.Size = UDim2.new(1, -50, 0, 16)
-UserName.Position = UDim2.new(0, 44, 0, 7)
+UserName.Size = UDim2.new(1, -12, 0, 16)
+UserName.Position = UDim2.new(0, 8, 0, 7)
 UserName.BackgroundTransparency = 1
 UserName.Font = Enum.Font.GothamBold
 UserName.Text = LocalPlayer.Name
@@ -425,8 +190,8 @@ UserName.TextSize = 11
 UserName.TextXAlignment = Enum.TextXAlignment.Left
 
 local UserRole = Instance.new("TextLabel", UserProfile)
-UserRole.Size = UDim2.new(1, -50, 0, 14)
-UserRole.Position = UDim2.new(0, 44, 0, 22)
+UserRole.Size = UDim2.new(1, -12, 0, 14)
+UserRole.Position = UDim2.new(0, 8, 0, 22)
 UserRole.BackgroundTransparency = 1
 UserRole.Font = Enum.Font.Gotham
 UserRole.Text = "VIP Member"
@@ -434,34 +199,9 @@ UserRole.TextColor3 = TextMuted
 UserRole.TextSize = 9
 UserRole.TextXAlignment = Enum.TextXAlignment.Left
 
-local Header = Instance.new("Frame", MainMenu)
-Header.Size = UDim2.new(1, -160, 0, 50)
-Header.Position = UDim2.new(0, 155, 0, 0)
-Header.BackgroundTransparency = 1
-
-local GreetingTitle = Instance.new("TextLabel", Header)
-GreetingTitle.Size = UDim2.new(0, 250, 0, 20)
-GreetingTitle.Position = UDim2.new(0, 10, 0, 12)
-GreetingTitle.BackgroundTransparency = 1
-GreetingTitle.Font = Enum.Font.GothamBold
-GreetingTitle.Text = "Hello, " .. LocalPlayer.Name
-GreetingTitle.TextColor3 = TextMain
-GreetingTitle.TextSize = 14
-GreetingTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-local GreetingSub = Instance.new("TextLabel", Header)
-GreetingSub.Size = UDim2.new(0, 200, 0, 14)
-GreetingSub.Position = UDim2.new(0, 10, 0, 32)
-GreetingSub.BackgroundTransparency = 1
-GreetingSub.Font = Enum.Font.Gotham
-GreetingSub.Text = "Region of Violence Hub"
-GreetingSub.TextColor3 = TextMuted
-GreetingSub.TextSize = 10
-GreetingSub.TextXAlignment = Enum.TextXAlignment.Left
-
 local ContentArea = Instance.new("Frame", MainMenu)
-ContentArea.Size = UDim2.new(1, -165, 1, -60)
-ContentArea.Position = UDim2.new(0, 155, 0, 55)
+ContentArea.Size = UDim2.new(1, -165, 1, -15)
+ContentArea.Position = UDim2.new(0, 155, 0, 10)
 ContentArea.BackgroundTransparency = 1
 
 -- ОТОБРАЖАТЕЛЬ БИНДОВ НА ЭКРАНЕ
@@ -495,22 +235,6 @@ KbContainer.BackgroundTransparency = 1
 local KbLayout = Instance.new("UIListLayout", KbContainer)
 KbLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local draggingKb, dragStartKb, startPosKb
-KeybindsDisplay.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        draggingKb = true dragStartKb = input.Position startPosKb = KeybindsDisplay.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if draggingKb and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStartKb
-        KeybindsDisplay.Position = UDim2.new(startPosKb.X.Scale, startPosKb.X.Offset + delta.X, startPosKb.Y.Scale, startPosKb.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
-end)
-
 local function UpdateKeybindsUI(name, keyName, hasKey)
     local label = ActiveBindsUI[name]
     if hasKey and keyName ~= "" then
@@ -542,13 +266,6 @@ local ActiveTabButton = nil
 local function ApplyTheme(newColor)
     AccentColor = newColor
     Config.RingColor = newColor
-    BoxGlow.Color = newColor
-    LoadingTitle.TextColor3 = newColor
-    BarFill.BackgroundColor3 = newColor
-    KeyGlow.Color = newColor
-    KeyTitle.TextColor3 = newColor
-    SubmitBtn.BackgroundColor3 = newColor
-    SubmitBtn.TextColor3 = (newColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or Color3.fromRGB(255, 255, 255)
     WmStroke.Color = newColor
     Watermark.TextColor3 = newColor
     Logo.TextColor3 = newColor
@@ -886,7 +603,7 @@ local function updateTriangleRing(enabled, count, radius, color)
     end
 end
 
--- ПОРТАЛ-ТЕЛЕПОРТ В ЛЮБУЮ ТОЧКУ КАРТЫ (КРОМЕ СПАВНА)
+-- ПОРТАЛ-ТЕЛЕПОРТ
 local PortalPart = Instance.new("Part")
 PortalPart.Name = "VortexPortal"
 PortalPart.Size = Vector3.new(4, 7, 1)
@@ -914,19 +631,16 @@ local function GetRandomMapPosition()
             end
         end
     end
-    
     if #mapParts > 0 then
         local randomPart = mapParts[math.random(1, #mapParts)]
         return randomPart.Position + Vector3.new(math.random(-15, 15), 4, math.random(-15, 15))
     end
-    
     return Vector3.new(math.random(-150, 150), 10, math.random(-150, 150))
 end
 
 local function SpawnPortal()
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local root = LocalPlayer.Character.HumanoidRootPart
-    
     local spawnPos = root.Position + (root.CFrame.LookVector * 6) + Vector3.new(0, 2, 0)
     PortalPart.Position = spawnPos
     PortalPart.CFrame = CFrame.new(spawnPos, root.Position)
@@ -948,7 +662,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- РАБОЧИЙ AUTO DAGGER
+-- AUTO DAGGER
 local function ListenToKillerAttacks(killerChar)
     local hum = killerChar:FindFirstChildOfClass("Humanoid")
     if not hum or hum:GetAttribute("VortexHooked") then return end
@@ -956,13 +670,11 @@ local function ListenToKillerAttacks(killerChar)
 
     hum.AnimationPlayed:Connect(function(track)
         if not Config.AutoStunDagger then return end
-        
         local animName = string.lower(track.Animation.AnimationId)
         if string.find(animName, "attack") or string.find(animName, "strike") or string.find(animName, "hit") or string.find(animName, "swing") then
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local myPos = LocalPlayer.Character.HumanoidRootPart.Position
                 local kPos = killerChar.HumanoidRootPart.Position
-                
                 if (myPos - kPos).Magnitude <= 12 then
                     VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0)
                     task.wait(0.02)
@@ -980,7 +692,6 @@ local tracerLines = {}
 local function DrawWhiteTracer(targetPos, index)
     local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
     local line = tracerLines[index]
-    
     if onScreen then
         if not line then
             line = Instance.new("Frame", TracersFolder)
@@ -990,11 +701,9 @@ local function DrawWhiteTracer(targetPos, index)
             tracerLines[index] = line
         end
         line.Visible = true
-        
         local startPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
         local endPos = Vector2.new(screenPos.X, screenPos.Y)
         local distance = (endPos - startPos).Magnitude
-        
         line.Size = UDim2.new(0, distance, 0, 1)
         line.Position = UDim2.new(0, startPos.X, 0, startPos.Y)
         line.Rotation = math.deg(math.atan2(endPos.Y - startPos.Y, endPos.X - startPos.X))
@@ -1052,17 +761,14 @@ local function ProcessSkillCheckFast()
     if not Config.AutoSkillCheck then return end
     local pGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not pGui then return end
-
     for _, screen in ipairs(pGui:GetChildren()) do
         if screen:IsA("ScreenGui") and screen.Enabled then
             local needle = screen:FindFirstChild("Needle", true) or screen:FindFirstChild("Pointer", true)
             local zone = screen:FindFirstChild("SuccessZone", true) or screen:FindFirstChild("GreatZone", true)
-            
             if needle and zone and needle.Visible and zone.Visible then
                 local needleRot = needle.Rotation % 360
                 local zoneRot = zone.Rotation % 360
                 local zoneWidth = zone.Size.X.Scale * 180
-                
                 if math.abs(needleRot - zoneRot) <= (zoneWidth + 2) then
                     VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
                     task.wait(0.01)
@@ -1077,81 +783,40 @@ end
 RunService.Heartbeat:Connect(function()
     ProcessSkillCheckFast()
     ProcessFlowstate()
-    ProcessInfiniteFlashlight()
-
     if Config.SpeedHack and LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = Config.SpeedValue end
-    end
-    if Config.GodRevolver and LocalPlayer.Character then
-        local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-        if tool and (string.find(string.lower(tool.Name), "revolver") or string.find(string.lower(tool.Name), "gun")) then
-            local ammo = tool:FindFirstChild("Ammo") if ammo then ammo.Value = 999 end
-        end
     end
 end)
 
 local throttleTimer = 0
 RunService.RenderStepped:Connect(function(dt)
     throttleTimer = throttleTimer + dt
-
     if Config.FullBright then Lighting.Brightness = 2 Lighting.ClockTime = 14 Lighting.GlobalShadows = false end
     if Config.NoFog then Lighting.FogEnd = 999999 Lighting.FogStart = 999999 end
     if Config.CustomTime then Lighting.ClockTime = Config.TimeOfDay end
     if Config.CustomFOVEnabled then Camera.FieldOfView = Config.FOVValue end
-
     if Config.TriangleRingEnabled then updateTriangleRing(true, 14, Config.RingSize, AccentColor) else updateTriangleRing(false, 0, 0, Color3.new()) end
-
     if Config.NoClip and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end
     end
-
-    if Config.VisualSpin and LocalPlayer.Character then
-        local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if rootPart then rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(dt * Config.SpinSpeed), 0) end
-    end
-
     CrosshairGui.Visible = Config.Crosshair
-
     if Config.KillerAimbot and Cache.ClosestKiller then
         Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Cache.ClosestKiller.Position), 0.35)
     end
 
-    local tracerIndex = 1
-    if Config.TracersKiller then
-        for _, char in ipairs(Cache.KillersList) do
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if root then DrawWhiteTracer(root.Position, tracerIndex) tracerIndex = tracerIndex + 1 end
-        end
-    end
-    if Config.TracersPlayers then
-        for _, char in ipairs(Cache.PlayersList) do
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if root then DrawWhiteTracer(root.Position, tracerIndex) tracerIndex = tracerIndex + 1 end
-        end
-    end
-    for i = tracerIndex, #tracerLines do
-        if tracerLines[i] then tracerLines[i].Visible = false end
-    end
-
     if throttleTimer >= 0.15 then
         throttleTimer = 0
-
         for _, char in ipairs(Cache.KillersList) do
             local hl = char:FindFirstChild("VDHighlight")
             if Config.KillerESP then
                 if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
-                hl.Adornee = char 
-                hl.FillColor = Config.KillerESPColor 
-                hl.OutlineColor = Color3.fromRGB(255, 255, 255) 
-                hl.OutlineTransparency = 0.2 
-                hl.FillTransparency = 0.6
+                hl.Adornee = char hl.FillColor = Config.KillerESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.OutlineTransparency = 0.2 hl.FillTransparency = 0.6
             else
                 if hl then hl:Destroy() end
             end
             ListenToKillerAttacks(char)
         end
-
         for _, char in ipairs(Cache.PlayersList) do
             local hl = char:FindFirstChild("VDHighlight")
             if Config.PlayerESP then
@@ -1161,7 +826,6 @@ RunService.RenderStepped:Connect(function(dt)
                 if hl then hl:Destroy() end
             end
         end
-
         if Config.GeneratorESP then
             for _, gen in ipairs(Cache.Generators) do
                 if not gen:FindFirstChild("GenHL") then
@@ -1174,7 +838,6 @@ RunService.RenderStepped:Connect(function(dt)
         else
             for _, gen in ipairs(Cache.Generators) do local hl = gen:FindFirstChild("GenHL") if hl then hl:Destroy() end end
         end
-
         if Config.PalletESP then
             for _, pal in ipairs(Cache.Pallets) do
                 if not pal:FindFirstChild("PalletHL") then
@@ -1187,7 +850,6 @@ RunService.RenderStepped:Connect(function(dt)
         else
             for _, pal in ipairs(Cache.Pallets) do local hl = pal:FindFirstChild("PalletHL") if hl then hl:Destroy() end end
         end
-
         if Config.WindowESP then
             for _, win in ipairs(Cache.Windows) do
                 if not win:FindFirstChild("WinHL") then
