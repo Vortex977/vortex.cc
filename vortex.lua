@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with Auth & Portal
+    Vortex Hub // Region of Violence (VD) - Clean Edition (Pre-AutoDagger)
     Author: TWKS
 ]]--
 
@@ -241,7 +241,6 @@ local Config = {
     SpeedValue = 16,
     FastRepair = false,
     KillerAimbot = false,
-    AutoStunDagger = false,
     Flowstate = false,
     InfiniteFlashlight = false,
 
@@ -708,7 +707,6 @@ CreateSlider(SurvivorCard, "Speed Value", 16, 100, 16, function(v) Config.SpeedV
 CreateToggle(SurvivorCard, "Fast Repair / Interactions", false, function(v) Config.FastRepair = v end)
 CreateToggle(SurvivorCard, "Flowstate (Fast Windows)", false, function(v) Config.Flowstate = v end)
 CreateToggle(SurvivorCard, "Infinite Flashlight", false, function(v) Config.InfiniteFlashlight = v end)
-CreateToggle(SurvivorCard, "Auto Dagger Counter Stun", false, function(v) Config.AutoStunDagger = v end)
 
 local KillerCard = CreateCard(MainR, "Killer Side")
 CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
@@ -848,28 +846,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
-local function ListenToKillerAttacks(killerChar)
-    local hum = killerChar:FindFirstChildOfClass("Humanoid")
-    if not hum or hum:GetAttribute("VortexHooked") then return end
-    hum:SetAttribute("VortexHooked", true)
-
-    hum.AnimationPlayed:Connect(function(track)
-        if not Config.AutoStunDagger then return end
-        local animName = string.lower(track.Animation.AnimationId)
-        if string.find(animName, "attack") or string.find(animName, "strike") or string.find(animName, "hit") or string.find(animName, "swing") then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-                local kPos = killerChar.HumanoidRootPart.Position
-                if (myPos - kPos).Magnitude <= 12 then
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0)
-                    task.wait(0.02)
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0)
-                end
-            end
-        end
-    end)
-end
-
 local TracersFolder = Instance.new("Folder", ScreenGui) 
 TracersFolder.Name = "VortexTracers"
 local tracerLines = {}
@@ -999,7 +975,6 @@ RunService.RenderStepped:Connect(function(dt)
             else
                 if hl then hl:Destroy() end
             end
-            ListenToKillerAttacks(char)
         end
         for _, char in ipairs(Cache.PlayersList) do
             local hl = char:FindFirstChild("VDHighlight")
