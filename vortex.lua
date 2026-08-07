@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition
+    Vortex Hub // Region of Violence (VD) - Complete Edition with Keybinds & Fixed Tracers
     Author: TWKS
 ]]--
 
@@ -637,7 +637,7 @@ local function CreateCard(parent, title)
     return Card
 end
 
--- СИСТЕМА TOGGLE + ВЫБОР РЕЖИМА БИНДА (Toggle / Hold)
+-- СИСТЕМА ТОГГЛОВ С БИНДАМИ И ВЫБОРОМ РЕЖИМА (Toggle / Hold)
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     
