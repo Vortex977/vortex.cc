@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Pure White Theme & Crisp Watermark Edition
+    Vortex Hub // Region of Violence (VD) - Keybinds & Fake Dagger Edition
     Author: TWKS
 ]]--
 
@@ -53,8 +53,16 @@ local ValidKeys = {
     ["admin2013"] = { Duration = 999999999, BoundHWID = nil }
 }
 
--- ФУЛЛ БЕЛАЯ ТЕМА (Pure White)
-local AccentColor = Color3.fromRGB(255, 255, 255)
+local PresetThemes = {
+    White = Color3.fromRGB(255, 255, 255),
+    Purple = Color3.fromRGB(170, 0, 255),
+    Cyan = Color3.fromRGB(0, 225, 255),
+    Green = Color3.fromRGB(0, 255, 120),
+    Red = Color3.fromRGB(255, 50, 50),
+    Orange = Color3.fromRGB(255, 150, 0),
+    Pink = Color3.fromRGB(255, 100, 200)
+}
+local AccentColor = PresetThemes.White
 
 local BgDark = Color3.fromRGB(15, 15, 18)
 local SidebarDark = Color3.fromRGB(22, 22, 26)
@@ -63,7 +71,7 @@ local TextMain = Color3.fromRGB(255, 255, 255)
 local TextMuted = Color3.fromRGB(160, 160, 170)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexHubWhiteEdition"
+ScreenGui.Name = "VortexHubKeybindsEdition"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -94,7 +102,7 @@ LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
 LoadingTitle.Position = UDim2.new(0, 0, 0, 28)
 LoadingTitle.BackgroundTransparency = 1
 LoadingTitle.Font = Enum.Font.GothamBold
-LoadingTitle.Text = "VORTEX ENGINE // PURE WHITE"
+LoadingTitle.Text = "VORTEX ENGINE // KEYBINDS"
 LoadingTitle.TextColor3 = AccentColor
 LoadingTitle.TextSize = 14
 
@@ -103,7 +111,7 @@ LoadingSub.Size = UDim2.new(1, 0, 0, 20)
 LoadingSub.Position = UDim2.new(0, 0, 0, 58)
 LoadingSub.BackgroundTransparency = 1
 LoadingSub.Font = Enum.Font.Code
-LoadingSub.Text = "INITIALIZING SECURE ENVIRONMENT..."
+LoadingSub.Text = "INITIALIZING KEYBINDS & FAKE DAGGER..."
 LoadingSub.TextColor3 = TextMuted
 LoadingSub.TextSize = 10
 
@@ -223,7 +231,7 @@ end)
 
 repeat task.wait(0.1) until KeyAuthGranted == true
 
--- Config
+-- Config with Binds & Fake Dagger
 local Config = {
     AutoSkillCheck = true,
     NoClip = false,
@@ -233,6 +241,18 @@ local Config = {
     FastRepair = false,
     KillerAimbot = false,
     AutoStunDagger = false,
+    FakeDagger = false,
+
+    -- Binds
+    Binds = {
+        SpeedHack = Enum.KeyCode.X,
+        AutoSkillCheck = Enum.KeyCode.Z,
+        KillerAimbot = Enum.KeyCode.C,
+        FakeDagger = Enum.KeyCode.Q,
+        AutoStunDagger = Enum.KeyCode.E,
+        NoClip = Enum.KeyCode.N
+    },
+
     FullBright = false,
     NoFog = false,
     CustomTime = false,
@@ -257,7 +277,34 @@ local Config = {
 
 local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 
--- ОБЫЧНАЯ ЧЕТКАЯ ВАТЕРМАРКА (Без мыла)
+-- FAKE DAGGER SYSTEM (Имитация анимации атаки дагером без реального использования)
+local function TriggerFakeDagger()
+    if not LocalPlayer.Character then return end
+    local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if not tool then
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, t in pairs(backpack:GetChildren()) do
+                if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then
+                    tool = t
+                    break
+                end
+            end
+        end
+    end
+    
+    if tool then
+        if tool.Parent ~= LocalPlayer.Character then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):EquipTool(tool)
+        end
+        -- Создаем ложную анимацию/активацию без расхода предмета
+        pcall(function()
+            tool:Activate()
+        end)
+    end
+end
+
+-- Watermark
 local Watermark = Instance.new("TextButton", ScreenGui)
 Watermark.Name = "Watermark"
 Watermark.Size = UDim2.new(0, 160, 0, 26)
@@ -405,9 +452,35 @@ ContentArea.Size = UDim2.new(1, -165, 1, -60)
 ContentArea.Position = UDim2.new(0, 155, 0, 55)
 ContentArea.BackgroundTransparency = 1
 
-local Tabs, Pages = {}, {}
-local ActiveTabButton = nil
+local ThemeObjects = {}
+local function RegisterThemeObject(obj, prop)
+    table.insert(ThemeObjects, {Object = obj, Property = prop}) obj[prop] = AccentColor
+end
 
+local ActiveTabButton = nil
+local function ApplyTheme(newColor)
+    AccentColor = newColor
+    Config.RingColor = newColor
+    BoxGlow.Color = newColor
+    LoadingTitle.TextColor3 = newColor
+    BarFill.BackgroundColor3 = newColor
+    KeyGlow.Color = newColor
+    KeyTitle.TextColor3 = newColor
+    SubmitBtn.BackgroundColor3 = newColor
+    SubmitBtn.TextColor3 = (newColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or Color3.fromRGB(255, 255, 255)
+    WmStroke.Color = newColor
+    Watermark.TextColor3 = newColor
+    Logo.TextColor3 = newColor
+    if ActiveTabButton then
+        ActiveTabButton.BackgroundColor3 = newColor
+        ActiveTabButton.TextColor3 = (newColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or TextMain
+    end
+    for _, item in ipairs(ThemeObjects) do
+        if item.Object and item.Object.Parent then item.Object[item.Property] = newColor end
+    end
+end
+
+local Tabs, Pages = {}, {}
 local function CreateTab(name, layoutOrder)
     local TabBtn = Instance.new("TextButton", TabContainer)
     TabBtn.Size = UDim2.new(1, -16, 0, 32)
@@ -440,7 +513,10 @@ local function CreateTab(name, layoutOrder)
     TabBtn.MouseButton1Click:Connect(function()
         for _, p in pairs(Pages) do p.Visible = false end
         for _, b in pairs(Tabs) do b.TextColor3 = TextMuted b.BackgroundColor3 = SidebarDark end
-        TabBtn.TextColor3 = Color3.fromRGB(15, 15, 18) TabBtn.BackgroundColor3 = AccentColor ActiveTabButton = TabBtn Page.Visible = true
+        TabBtn.TextColor3 = (AccentColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or TextMain
+        TabBtn.BackgroundColor3 = AccentColor
+        ActiveTabButton = TabBtn
+        Page.Visible = true
     end)
 
     table.insert(Tabs, TabBtn) table.insert(Pages, Page)
@@ -473,10 +549,13 @@ local function CreateToggle(card, text, default, callback)
     Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0 Switch.Text = ""
     Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 3)
 
+    if default then RegisterThemeObject(Switch, "BackgroundColor3") end
+
     local state = default
     Switch.MouseButton1Click:Connect(function()
         state = not state
         Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 45, 55)
+        if state then RegisterThemeObject(Switch, "BackgroundColor3") end
         callback(state)
     end)
 end
@@ -489,12 +568,14 @@ local function CreateSlider(card, text, min, max, default, callback)
     local ValLabel = Instance.new("TextLabel", Slider)
     ValLabel.Size = UDim2.new(0.4, 0, 0, 14) ValLabel.Position = UDim2.new(0.6, 0, 0, 0) ValLabel.BackgroundTransparency = 1
     ValLabel.Font = Enum.Font.GothamBold ValLabel.Text = tostring(default) ValLabel.TextColor3 = AccentColor ValLabel.TextSize = 10 ValLabel.TextXAlignment = Enum.TextXAlignment.Right
+    RegisterThemeObject(ValLabel, "TextColor3")
     local SliderBg = Instance.new("Frame", Slider)
     SliderBg.Size = UDim2.new(1, 0, 0, 4) SliderBg.Position = UDim2.new(0, 0, 0, 20) SliderBg.BackgroundColor3 = Color3.fromRGB(45, 45, 55) SliderBg.BorderSizePixel = 0
     Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
     local SliderFill = Instance.new("Frame", SliderBg)
     SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0) SliderFill.BackgroundColor3 = AccentColor SliderFill.BorderSizePixel = 0
     Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+    RegisterThemeObject(SliderFill, "BackgroundColor3")
     local draggingSlider = false
     SliderBg.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true end
@@ -511,20 +592,30 @@ local function CreateSlider(card, text, min, max, default, callback)
     end)
 end
 
+local function CreateButton(card, text, callback)
+    local Btn = Instance.new("TextButton", card)
+    Btn.Size = UDim2.new(1, 0, 0, 28) Btn.BackgroundColor3 = Color3.fromRGB(35, 40, 50) Btn.BorderSizePixel = 0
+    Btn.Font = Enum.Font.GothamBold Btn.Text = text Btn.TextColor3 = TextMain Btn.TextSize = 10
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
+    Btn.MouseButton1Click:Connect(callback)
+end
+
 local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
 local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
+local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 3)
 
-local SurvivorCard = CreateCard(MainL, "Survivor Side")
-CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
-CreateToggle(SurvivorCard, "Noclip", false, function(v) Config.NoClip = v end)
+local SurvivorCard = CreateCard(MainL, "Survivor Side & Binds")
+CreateToggle(SurvivorCard, "Auto Skill-Check [Z]", true, function(v) Config.AutoSkillCheck = v end)
+CreateToggle(SurvivorCard, "Noclip [N]", false, function(v) Config.NoClip = v end)
 CreateToggle(SurvivorCard, "God Revolver", false, function(v) Config.GodRevolver = v end)
-CreateToggle(SurvivorCard, "Speedhack", false, function(v) Config.SpeedHack = v end)
+CreateToggle(SurvivorCard, "Speedhack [X]", false, function(v) Config.SpeedHack = v end)
 CreateSlider(SurvivorCard, "Speed Value", 16, 100, 16, function(v) Config.SpeedValue = v end)
 CreateToggle(SurvivorCard, "Fast Repair / Interactions", false, function(v) Config.FastRepair = v end)
-CreateToggle(SurvivorCard, "Auto Dagger Counter Stun", false, function(v) Config.AutoStunDagger = v end)
+CreateToggle(SurvivorCard, "Auto Dagger Counter Stun [E]", false, function(v) Config.AutoStunDagger = v end)
+CreateToggle(SurvivorCard, "Fake Dagger [Q]", false, function(v) Config.FakeDagger = v end)
 
-local KillerCard = CreateCard(MainR, "Killer Side")
-CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
+local KillerCard = CreateCard(MainR, "Killer Side & Binds")
+CreateToggle(KillerCard, "Killer Aimbot [C]", false, function(v) Config.KillerAimbot = v end)
 
 local EnvironmentCard = CreateCard(VisualsL, "World Visuals")
 CreateToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
@@ -547,7 +638,34 @@ CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin 
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
+local ThemePresetCardL = CreateCard(ThemesL, "Presets Side A")
+CreateButton(ThemePresetCardL, "Theme: Pure White (Default)", function() ApplyTheme(PresetThemes.White) end)
+CreateButton(ThemePresetCardL, "Theme: Purple Neon", function() ApplyTheme(PresetThemes.Purple) end)
+CreateButton(ThemePresetCardL, "Theme: Cyan Neon", function() ApplyTheme(PresetThemes.Cyan) end)
+
+local ThemePresetCardR = CreateCard(ThemesR, "Presets Side B")
+CreateButton(ThemePresetCardR, "Theme: Emerald Green", function() ApplyTheme(PresetThemes.Green) end)
+CreateButton(ThemePresetCardR, "Theme: Crimson Red", function() ApplyTheme(PresetThemes.Red) end)
+CreateButton(ThemePresetCardR, "Theme: Hot Pink", function() ApplyTheme(PresetThemes.Pink) end)
+
 MainTabBtn.TextColor3 = Color3.fromRGB(15, 15, 18) MainTabBtn.BackgroundColor3 = AccentColor ActiveTabButton = MainTabBtn Pages[1].Visible = true
+
+-- Обработка нажатий клавиш (Бинды)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Config.Binds.FakeDagger then
+        TriggerFakeDagger()
+    elseif input.KeyCode == Config.Binds.SpeedHack then
+        Config.SpeedHack = not Config.SpeedHack
+    elseif input.KeyCode == Config.Binds.AutoSkillCheck then
+        Config.AutoSkillCheck = not Config.AutoSkillCheck
+    elseif input.KeyCode == Config.Binds.KillerAimbot then
+        Config.KillerAimbot = not Config.KillerAimbot
+    elseif input.KeyCode == Config.Binds.NoClip then
+        Config.NoClip = not Config.NoClip
+    end
+end)
 
 local RingFolder = Instance.new("Folder", Workspace) RingFolder.Name = "VortexTriangleRing"
 local triangleParts = {}
@@ -641,8 +759,8 @@ end
 
 local CrosshairGui = Instance.new("Frame", ScreenGui)
 CrosshairGui.Name = "VortexCrosshair" CrosshairGui.Size = UDim2.new(0, 10, 0, 10) CrosshairGui.Position = UDim2.new(0.5, -5, 0.5, -5) CrosshairGui.BackgroundTransparency = 1 CrosshairGui.Visible = false
-local c1 = Instance.new("Frame", CrosshairGui) c1.Size = UDim2.new(0, 4, 0, 2) c1.Position = UDim2.new(0, 3, 0, 4) c1.BackgroundColor3 = AccentColor c1.BorderSizePixel = 0
-local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c2.Position = UDim2.new(0, 4, 0, 3) c2.BackgroundColor3 = AccentColor c2.BorderSizePixel = 0
+local c1 = Instance.new("Frame", CrosshairGui) c1.Size = UDim2.new(0, 4, 0, 2) c1.Position = UDim2.new(0, 3, 0, 4) c1.BackgroundColor3 = AccentColor c1.BorderSizePixel = 0 RegisterThemeObject(c1, "BackgroundColor3")
+local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c2.Position = UDim2.new(0, 4, 0, 3) c2.BackgroundColor3 = AccentColor c2.BorderSizePixel = 0 RegisterThemeObject(c2, "BackgroundColor3")
 
 task.spawn(function()
     while task.wait(3) do
@@ -710,6 +828,13 @@ end
 
 RunService.Heartbeat:Connect(function()
     ProcessSkillCheckFast()
+    
+    -- Обработка Fake Dagger по тумблеру в меню
+    if Config.FakeDagger then
+        TriggerFakeDagger()
+        Config.FakeDagger = false -- Сбрасываем тумблер после разового срабатывания
+    end
+
     if Config.SpeedHack and LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = Config.SpeedValue end
