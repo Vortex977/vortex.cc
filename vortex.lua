@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with New Features
+    Vortex Hub // Region of Violence (VD) - Complete Edition with New Features & Keybinds
     Author: TWKS
 ]]--
 
@@ -292,7 +292,7 @@ local function TriggerFakeDagger()
     end
 end
 
--- FLOWSTATE ФУНКЦИЯ (быстрое перелазание через окна)
+-- FLOWSTATE ФУНКЦИЯ
 local function ProcessFlowstate()
     if not Config.Flowstate then return end
     local char = LocalPlayer.Character
@@ -629,9 +629,61 @@ local function CreateButton(card, text, callback)
     Btn.MouseButton1Click:Connect(callback)
 end
 
+-- NEW KEYBIND FUNCTION
+local function CreateBind(card, text, defaultKey, callback)
+    local BindFrame = Instance.new("Frame", card) 
+    BindFrame.Size = UDim2.new(1, 0, 0, 22) 
+    BindFrame.BackgroundTransparency = 1
+
+    local Label = Instance.new("TextLabel", BindFrame)
+    Label.Size = UDim2.new(0.6, 0, 1, 0) 
+    Label.BackgroundTransparency = 1 
+    Label.Font = Enum.Font.Gotham
+    Label.Text = text 
+    Label.TextColor3 = TextMuted 
+    Label.TextSize = 10 
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local BindBtn = Instance.new("TextButton", BindFrame)
+    BindBtn.Size = UDim2.new(0, 60, 0, 16) 
+    BindBtn.Position = UDim2.new(1, -60, 0.5, -8)
+    BindBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55) 
+    BindBtn.BorderSizePixel = 0 
+    BindBtn.Font = Enum.Font.GothamBold 
+    BindBtn.Text = defaultKey and defaultKey.Name or "NONE"
+    BindBtn.TextColor3 = AccentColor 
+    BindBtn.TextSize = 10
+    Instance.new("UICorner", BindBtn).CornerRadius = UDim.new(0, 3)
+    RegisterThemeObject(BindBtn, "TextColor3")
+
+    local currentKey = defaultKey
+    local waitingForBind = false
+
+    BindBtn.MouseButton1Click:Connect(function()
+        waitingForBind = true
+        BindBtn.Text = "..."
+    end)
+
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if waitingForBind and input.UserInputType == Enum.UserInputType.Keyboard then
+            waitingForBind = false
+            if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.Backspace then
+                currentKey = nil
+                BindBtn.Text = "NONE"
+            else
+                currentKey = input.KeyCode
+                BindBtn.Text = currentKey.Name
+            end
+        elseif not gpe and currentKey and input.KeyCode == currentKey and not waitingForBind then
+            callback()
+        end
+    end)
+end
+
 local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
 local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
 local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 3)
+local SettingsL, SettingsR, SettingsTabBtn = CreateTab("Settings", 4) -- Новая вкладка для настроек и биндов
 
 local SurvivorCard = CreateCard(MainL, "Survivor Side")
 CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
@@ -678,6 +730,18 @@ local ThemePresetCardR = CreateCard(ThemesR, "Presets Side B")
 CreateButton(ThemePresetCardR, "Theme: Emerald Green", function() ApplyTheme(PresetThemes.Green) end)
 CreateButton(ThemePresetCardR, "Theme: Crimson Red", function() ApplyTheme(PresetThemes.Red) end)
 CreateButton(ThemePresetCardR, "Theme: Hot Pink", function() ApplyTheme(PresetThemes.Pink) end)
+
+-- ДОБАВЛЕННЫЕ КАРТОЧКИ И БИНДЫ (Настройки)
+local BindsCard = CreateCard(SettingsL, "Keybinds System")
+CreateBind(BindsCard, "Toggle Hub UI", Enum.KeyCode.RightShift, function()
+    MainMenu.Visible = not MainMenu.Visible
+end)
+CreateBind(BindsCard, "Fast Flowstate Dash", Enum.KeyCode.Q, function()
+    ProcessFlowstate()
+end)
+CreateBind(BindsCard, "Trigger Fake Dagger", Enum.KeyCode.F, function()
+    Config.FakeDagger = true
+end)
 
 MainTabBtn.TextColor3 = Color3.fromRGB(15, 15, 18) MainTabBtn.BackgroundColor3 = AccentColor ActiveTabButton = MainTabBtn Pages[1].Visible = true
 
