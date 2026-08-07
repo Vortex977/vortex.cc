@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Full GUI Restoration & Draggable Keybinds Edition
+    Vortex Hub // Region of Violence (VD) - Complete Edition with New Features
     Author: TWKS
 ]]--
 
@@ -71,7 +71,7 @@ local TextMain = Color3.fromRGB(255, 255, 255)
 local TextMuted = Color3.fromRGB(160, 160, 170)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexHubRestored"
+ScreenGui.Name = "VortexHubComplete"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -102,7 +102,7 @@ LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
 LoadingTitle.Position = UDim2.new(0, 0, 0, 28)
 LoadingTitle.BackgroundTransparency = 1
 LoadingTitle.Font = Enum.Font.GothamBold
-LoadingTitle.Text = "VORTEX ENGINE // RESTORED"
+LoadingTitle.Text = "VORTEX ENGINE // COMPLETE"
 LoadingTitle.TextColor3 = AccentColor
 LoadingTitle.TextSize = 14
 
@@ -111,7 +111,7 @@ LoadingSub.Size = UDim2.new(1, 0, 0, 20)
 LoadingSub.Position = UDim2.new(0, 0, 0, 58)
 LoadingSub.BackgroundTransparency = 1
 LoadingSub.Font = Enum.Font.Code
-LoadingSub.Text = "RESTORING ALL FUNCTIONS & DRAGGABLE BINDS..."
+LoadingSub.Text = "INITIALIZING ALL FEATURES..."
 LoadingSub.TextColor3 = TextMuted
 LoadingSub.TextSize = 10
 
@@ -245,17 +245,6 @@ local Config = {
     Flowstate = false,
     InfiniteFlashlight = false,
 
-    Binds = {
-        SpeedHack = Enum.KeyCode.X,
-        AutoSkillCheck = Enum.KeyCode.Z,
-        KillerAimbot = Enum.KeyCode.C,
-        FakeDagger = Enum.KeyCode.Q,
-        AutoStunDagger = Enum.KeyCode.E,
-        NoClip = Enum.KeyCode.N,
-        Flowstate = Enum.KeyCode.F,
-        InfiniteFlashlight = Enum.KeyCode.L
-    },
-
     FullBright = false,
     NoFog = false,
     CustomTime = false,
@@ -280,128 +269,30 @@ local Config = {
 
 local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 
--- DRAGGABLE KEYBINDS LIST (Как на фото, но перетаскиваемое)
-local BindListFrame = Instance.new("Frame", ScreenGui)
-BindListFrame.Name = "KeybindsList"
-BindListFrame.Size = UDim2.new(0, 180, 0, 240)
-BindListFrame.Position = UDim2.new(0.02, 0, 0.35, 0)
-BindListFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
-BindListFrame.BackgroundTransparency = 0.4
-BindListFrame.BorderSizePixel = 0
-Instance.new("UICorner", BindListFrame).CornerRadius = UDim.new(0, 6)
-
-local BindListLayout = Instance.new("UIListLayout", BindListFrame)
-BindListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-BindListLayout.Padding = UDim.new(0, 2)
-
-local BindTitle = Instance.new("TextLabel", BindListFrame)
-BindTitle.Name = "Title"
-BindTitle.Size = UDim2.new(1, 0, 0, 28)
-BindTitle.BackgroundTransparency = 1
-BindTitle.Font = Enum.Font.GothamBold
-BindTitle.Text = "  Keybinds (Drag me)"
-BindTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-BindTitle.TextSize = 12
-BindTitle.TextXAlignment = Enum.TextXAlignment.Left
-
--- Логика перетаскивания окна кейбиндов мышкой
-local bindDragging, bindDragStart, bindStartPos
-BindTitle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        bindDragging = true bindDragStart = input.Position bindStartPos = BindListFrame.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if bindDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - bindDragStart
-        BindListFrame.Position = UDim2.new(bindStartPos.X.Scale, bindStartPos.X.Offset + delta.X, bindStartPos.Y.Scale, bindStartPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then bindDragging = false end
-end)
-
-local BindLabels = {}
-local function RegisterBindDisplay(name, configKey)
-    local lbl = Instance.new("TextLabel", BindListFrame)
-    lbl.Size = UDim2.new(1, 0, 0, 20)
-    lbl.BackgroundTransparency = 1
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 10
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    BindLabels[configKey] = {Label = lbl, Name = name}
-end
-
-RegisterBindDisplay("SpeedHack", "SpeedHack")
-RegisterBindDisplay("Flowstate", "Flowstate")
-RegisterBindDisplay("Auto Skill-Check", "AutoSkillCheck")
-RegisterBindDisplay("Killer Aimbot", "KillerAimbot")
-RegisterBindDisplay("Auto Dagger", "AutoStunDagger")
-RegisterBindDisplay("Fake Dagger", "FakeDagger")
-RegisterBindDisplay("Infinite Light", "InfiniteFlashlight")
-RegisterBindDisplay("NoClip", "NoClip")
-
-local function UpdateBindDisplay()
-    for key, data in pairs(BindLabels) do
-        local isActive = Config[key]
-        local bindKeyName = Config.Binds[key] and Config.Binds[key].Name or "None"
-        data.Label.Text = "  " .. data.Name .. " [" .. bindKeyName .. "]"
-        if isActive then
-            data.Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-            data.Label.TextTransparency = 0
-        else
-            data.Label.TextColor3 = Color3.fromRGB(120, 120, 130)
-            data.Label.TextTransparency = 0.4
-        end
-    end
-end
-
--- Система установки бинда через нажатие колесика мыши (MMB) на кнопку в интерфейсе
-local BindingFeature = nil
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if BindingFeature and input.UserInputType == Enum.UserInputType.Keyboard then
-        Config.Binds[BindingFeature] = input.KeyCode
-        BindingFeature = nil
-        UpdateBindDisplay()
-        return
-    end
-
-    if gpe then return end
-
-    for key, code in pairs(Config.Binds) do
-        if input.KeyCode == code then
-            if key == "SpeedHack" then Config.SpeedHack = not Config.SpeedHack
-            elseif key == "Flowstate" then Config.Flowstate = not Config.Flowstate
-            elseif key == "AutoSkillCheck" then Config.AutoSkillCheck = not Config.AutoSkillCheck
-            elseif key == "KillerAimbot" then Config.KillerAimbot = not Config.KillerAimbot
-            elseif key == "AutoStunDagger" then Config.AutoStunDagger = not Config.AutoStunDagger
-            elseif key == "FakeDagger" then
-                if LocalPlayer.Character then
-                    local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                    if not tool then
-                        local bp = LocalPlayer:FindFirstChild("Backpack")
-                        if bp then
-                            for _, t in pairs(bp:GetChildren()) do
-                                if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then
-                                    tool = t break
-                                end
-                            end
-                        end
-                    end
-                    if tool then
-                        if tool.Parent ~= LocalPlayer.Character then LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):EquipTool(tool) end
-                        pcall(function() tool:Activate() end)
-                    end
+-- FAKE DAGGER ФУНКЦИЯ
+local function TriggerFakeDagger()
+    if not LocalPlayer.Character then return end
+    local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if not tool then
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, t in pairs(backpack:GetChildren()) do
+                if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then
+                    tool = t
+                    break
                 end
-            elseif key == "InfiniteFlashlight" then Config.InfiniteFlashlight = not Config.InfiniteFlashlight
-            elseif key == "NoClip" then Config.NoClip = not Config.NoClip
             end
-            UpdateBindDisplay()
         end
     end
-end)
+    if tool then
+        if tool.Parent ~= LocalPlayer.Character then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):EquipTool(tool)
+        end
+        pcall(function() tool:Activate() end)
+    end
+end
 
--- Flowstate & Infinite Flashlight
+-- FLOWSTATE ФУНКЦИЯ (быстрое перелазание через окна)
 local function ProcessFlowstate()
     if not Config.Flowstate then return end
     local char = LocalPlayer.Character
@@ -419,6 +310,7 @@ local function ProcessFlowstate()
     end
 end
 
+-- INFINITE FLASHLIGHT ФУНКЦИЯ
 local function ProcessInfiniteFlashlight()
     if not Config.InfiniteFlashlight then return end
     local char = LocalPlayer.Character
@@ -676,41 +568,7 @@ local function CreateCard(parent, title)
     return Card
 end
 
-local function CreateToggleWithBind(card, text, configKey, callback)
-    local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 24) Toggle.BackgroundTransparency = 1
-    local Label = Instance.new("TextLabel", Toggle)
-    Label.Size = UDim2.new(0.6, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
-    Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local BindBtn = Instance.new("TextButton", Toggle)
-    BindBtn.Size = UDim2.new(0, 50, 0, 16) BindBtn.Position = UDim2.new(1, -72, 0.5, -8)
-    BindBtn.BackgroundColor3 = Color3.fromRGB(35, 38, 45) BindBtn.BorderSizePixel = 0
-    BindBtn.Font = Enum.Font.GothamBold BindBtn.Text = Config.Binds[configKey] and Config.Binds[configKey].Name or "None"
-    BindBtn.TextColor3 = TextMain BindBtn.TextSize = 9
-    Instance.new("UICorner", BindBtn).CornerRadius = UDim.new(0, 3)
-
-    BindBtn.MouseButton3Click:Connect(function()
-        BindBtn.Text = "..."
-        BindingFeature = configKey
-    end)
-
-    local Switch = Instance.new("TextButton", Toggle)
-    Switch.Size = UDim2.new(0, 14, 0, 14) Switch.Position = UDim2.new(1, -14, 0.5, -7)
-    Switch.BackgroundColor3 = Config[configKey] and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0 Switch.Text = ""
-    Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 3)
-
-    if Config[configKey] then RegisterThemeObject(Switch, "BackgroundColor3") end
-
-    Switch.MouseButton1Click:Connect(function()
-        Config[configKey] = not Config[configKey]
-        Switch.BackgroundColor3 = Config[configKey] and AccentColor or Color3.fromRGB(45, 45, 55)
-        if Config[configKey] then RegisterThemeObject(Switch, "BackgroundColor3") end
-        callback(Config[configKey])
-        UpdateBindDisplay()
-    end)
-end
-
-local function CreatePureToggle(card, text, default, callback)
+local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     local Label = Instance.new("TextLabel", Toggle)
     Label.Size = UDim2.new(0.7, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
@@ -719,7 +577,9 @@ local function CreatePureToggle(card, text, default, callback)
     Switch.Size = UDim2.new(0, 14, 0, 14) Switch.Position = UDim2.new(1, -14, 0.5, -7)
     Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0 Switch.Text = ""
     Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 3)
+
     if default then RegisterThemeObject(Switch, "BackgroundColor3") end
+
     local state = default
     Switch.MouseButton1Click:Connect(function()
         state = not state
@@ -773,39 +633,41 @@ local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
 local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
 local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 3)
 
-local SurvivorCard = CreateCard(MainL, "Survivor Side & Binds (MMB)")
-CreateToggleWithBind(SurvivorCard, "Auto Skill-Check", "AutoSkillCheck", function(v) Config.AutoSkillCheck = v end)
-CreateToggleWithBind(SurvivorCard, "Noclip", "NoClip", function(v) Config.NoClip = v end)
-CreateToggleWithBind(SurvivorCard, "Speedhack", "SpeedHack", function(v) Config.SpeedHack = v end)
+local SurvivorCard = CreateCard(MainL, "Survivor Side")
+CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
+CreateToggle(SurvivorCard, "Noclip", false, function(v) Config.NoClip = v end)
+CreateToggle(SurvivorCard, "God Revolver", false, function(v) Config.GodRevolver = v end)
+CreateToggle(SurvivorCard, "Speedhack", false, function(v) Config.SpeedHack = v end)
 CreateSlider(SurvivorCard, "Speed Value", 16, 100, 16, function(v) Config.SpeedValue = v end)
-CreateToggleWithBind(SurvivorCard, "Flowstate (Fast Windows)", "Flowstate", function(v) Config.Flowstate = v end)
-CreateToggleWithBind(SurvivorCard, "Infinite Flashlight", "InfiniteFlashlight", function(v) Config.InfiniteFlashlight = v end)
-CreateToggleWithBind(SurvivorCard, "Auto Dagger Stun", "AutoStunDagger", function(v) Config.AutoStunDagger = v end)
-CreateToggleWithBind(SurvivorCard, "Fake Dagger", "FakeDagger", function(v) Config.FakeDagger = v end)
+CreateToggle(SurvivorCard, "Fast Repair / Interactions", false, function(v) Config.FastRepair = v end)
+CreateToggle(SurvivorCard, "Flowstate (Fast Windows)", false, function(v) Config.Flowstate = v end)
+CreateToggle(SurvivorCard, "Infinite Flashlight", false, function(v) Config.InfiniteFlashlight = v end)
+CreateToggle(SurvivorCard, "Auto Dagger Counter Stun", false, function(v) Config.AutoStunDagger = v end)
+CreateToggle(SurvivorCard, "Fake Dagger", false, function(v) Config.FakeDagger = v end)
 
-local KillerCard = CreateCard(MainR, "Killer Side & Binds")
-CreateToggleWithBind(KillerCard, "Killer Aimbot", "KillerAimbot", function(v) Config.KillerAimbot = v end)
+local KillerCard = CreateCard(MainR, "Killer Side")
+CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
 
 local EnvironmentCard = CreateCard(VisualsL, "World Visuals")
-CreatePureToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
-CreatePureToggle(EnvironmentCard, "Remove Fog", false, function(v) Config.NoFog = v end)
-CreatePureToggle(EnvironmentCard, "Custom Time Of Day", false, function(v) Config.CustomTime = v end)
+CreateToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
+CreateToggle(EnvironmentCard, "Remove Fog", false, function(v) Config.NoFog = v end)
+CreateToggle(EnvironmentCard, "Custom Time Of Day", false, function(v) Config.CustomTime = v end)
 CreateSlider(EnvironmentCard, "Clock Time", 0, 24, 14, function(v) Config.TimeOfDay = v end)
-CreatePureToggle(EnvironmentCard, "Custom FOV", false, function(v) Config.CustomFOVEnabled = v end)
+CreateToggle(EnvironmentCard, "Custom FOV", false, function(v) Config.CustomFOVEnabled = v end)
 CreateSlider(EnvironmentCard, "FOV Value", 70, 120, 90, function(v) Config.FOVValue = v end)
 
 local ESPCard = CreateCard(VisualsR, "ESP & Tracers")
-CreatePureToggle(ESPCard, "Player ESP", false, function(v) Config.PlayerESP = v end)
-CreatePureToggle(ESPCard, "Killer ESP", false, function(v) Config.KillerESP = v end)
-CreatePureToggle(ESPCard, "White Tracers: Players", false, function(v) Config.TracersPlayers = v end)
-CreatePureToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
-CreatePureToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
-CreatePureToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
-CreatePureToggle(ESPCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
+CreateToggle(ESPCard, "Player ESP", false, function(v) Config.PlayerESP = v end)
+CreateToggle(ESPCard, "Killer ESP", false, function(v) Config.KillerESP = v end)
+CreateToggle(ESPCard, "White Tracers: Players", false, function(v) Config.TracersPlayers = v end)
+CreateToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
+CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
+CreateToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
+CreateToggle(ESPCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
 CreateSlider(ESPCard, "Ring Size", 5, 40, 15, function(v) Config.RingSize = v end)
-CreatePureToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
+CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
-CreatePureToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
+CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
 local ThemePresetCardL = CreateCard(ThemesL, "Presets Side A")
 CreateButton(ThemePresetCardL, "Theme: Pure White (Default)", function() ApplyTheme(PresetThemes.White) end)
@@ -983,6 +845,11 @@ RunService.Heartbeat:Connect(function()
     ProcessFlowstate()
     ProcessInfiniteFlashlight()
 
+    if Config.FakeDagger then
+        TriggerFakeDagger()
+        Config.FakeDagger = false
+    end
+
     if Config.SpeedHack and LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = Config.SpeedValue end
@@ -1085,5 +952,3 @@ RunService.RenderStepped:Connect(function(dt)
         end
     end
 end)
-
-UpdateBindDisplay()
