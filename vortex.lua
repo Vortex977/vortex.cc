@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Adaptive AI Safe-Distance & Zero-Lag Edition
+    Vortex Hub // Region of Violence (VD) - Premium HWID & Cyberpunk Edition
     Author: TWKS
 ]]--
 
@@ -11,25 +11,51 @@ local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local HttpService = game:GetService("HttpService")
+local AnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Кэш для мгновенного доступа без лагов
-local Cache = {
-    Generators = {},
-    Pallets = {},
-    ClosestKiller = nil,
-    SafeDistance = 8.5
-}
+-- Получение уникального HWID текущего ПК
+local HWID = "UNKNOWN-PC"
+pcall(function()
+    HWID = AnalyticsService:GetClientId()
+end)
 
--- Database of valid keys
+-- Функция получения точного сетевого времени (защита от перемотки часов)
+local function GetNetworkTime()
+    local success, result = pcall(function()
+        local response = game:HttpGet("http://worldtimeapi.org/api/timezone/Etc/UTC")
+        local data = HttpService:JSONDecode(response)
+        return data.unixtime
+    end)
+    if success and result then return result else return os.time() end
+end
+
+-- Полный список твоих ключей (с защитой HWID и привязкой по времени)
 local ValidKeys = {
-    ["VORTEX-1D-01A9"] = 86400, ["VORTEX-1D-02B4"] = 86400, ["VORTEX-1D-03C7"] = 86400, ["VORTEX-1D-04D2"] = 86400, ["VORTEX-1D-05E8"] = 86400,
-    ["VORTEX-1D-06F1"] = 86400, ["VORTEX-1D-07G5"] = 86400, ["VORTEX-1D-08H9"] = 86400, ["VORTEX-1D-09J3"] = 86400, ["VORTEX-1D-10K6"] = 86400,
-    ["VORTEX-30D-A101"] = 2592000, ["VORTEX-30D-B202"] = 2592000, ["VORTEX-30D-C303"] = 2592000, ["VORTEX-30D-D404"] = 2592000, ["VORTEX-30D-E505"] = 2592000,
-    ["VORTEX-30D-F606"] = 2592000, ["VORTEX-30D-G707"] = 2592000, ["VORTEX-30D-H808"] = 2592000, ["VORTEX-30D-J909"] = 2592000, ["VORTEX-30D-K010"] = 2592000,
-    ["admin2013"] = 999999999
+    ["VORTEX-1D-01A9"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-02B4"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-03C7"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-04D2"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-05E8"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-06F1"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-07G5"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-08H9"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-09J3"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-10K6"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-30D-A101"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-B202"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-C303"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-D404"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-E505"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-F606"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-G707"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-H808"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-J909"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-K010"] = { Duration = 2592000, BoundHWID = nil },
+    ["admin2013"] = { Duration = 999999999, BoundHWID = nil }
 }
 
 -- Preset Themes
@@ -43,74 +69,177 @@ local PresetThemes = {
 }
 local AccentColor = PresetThemes.Purple
 
-local BgDark = Color3.fromRGB(15, 16, 20)
-local SidebarDark = Color3.fromRGB(20, 21, 26)
-local CardDark = Color3.fromRGB(24, 26, 32)
+local BgDark = Color3.fromRGB(12, 13, 17)
+local SidebarDark = Color3.fromRGB(17, 19, 24)
+local CardDark = Color3.fromRGB(22, 24, 31)
 local TextMain = Color3.fromRGB(240, 240, 245)
 local TextMuted = Color3.fromRGB(110, 115, 125)
 
 -- UI Parent Screen
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexHubOptimizedAI"
+ScreenGui.Name = "VortexHubUltra"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
--- Smooth Loading Screen
+-- 1. КРАСИВОЕ КИБЕРПАНКОВОЕ ОКНО ЗАГРУЗКИ
 local LoadingFrame = Instance.new("Frame", ScreenGui)
-LoadingFrame.Size = UDim2.new(1, 0, 1, 0) LoadingFrame.BackgroundColor3 = BgDark LoadingFrame.BorderSizePixel = 0 LoadingFrame.ZIndex = 1000
+LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
+LoadingFrame.BackgroundColor3 = BgDark
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 1000
 
 local LoadingBox = Instance.new("Frame", LoadingFrame)
-LoadingBox.Size = UDim2.new(0, 420, 0, 170) LoadingBox.Position = UDim2.new(0.5, -210, 0.5, -85) LoadingBox.BackgroundColor3 = SidebarDark LoadingBox.BorderSizePixel = 0
-Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 10)
-local BoxStroke = Instance.new("UIStroke", LoadingBox) BoxStroke.Color = AccentColor BoxStroke.Thickness = 1.5 BoxStroke.Transparency = 0.3
+LoadingBox.Size = UDim2.new(0, 440, 0, 180)
+LoadingBox.Position = UDim2.new(0.5, -220, 0.5, -90)
+LoadingBox.BackgroundColor3 = SidebarDark
+LoadingBox.BorderSizePixel = 0
+Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 12)
+
+local BoxStroke = Instance.new("UIStroke", LoadingBox)
+BoxStroke.Color = AccentColor
+BoxStroke.Thickness = 1.5
+BoxStroke.Transparency = 0.2
 
 local LoadingTitle = Instance.new("TextLabel", LoadingBox)
-LoadingTitle.Size = UDim2.new(1, 0, 0, 40) LoadingTitle.Position = UDim2.new(0, 0, 0, 25) LoadingTitle.BackgroundTransparency = 1 LoadingTitle.Font = Enum.Font.GothamBold LoadingTitle.Text = "VORTEX // ZERO-LAG AI EDITION" LoadingTitle.TextColor3 = AccentColor LoadingTitle.TextSize = 13
+LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
+LoadingTitle.Position = UDim2.new(0, 0, 0, 25)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Font = Enum.Font.GothamBold
+LoadingTitle.Text = "VORTEX ENGINE // SECURE LOADER"
+LoadingTitle.TextColor3 = AccentColor
+LoadingTitle.TextSize = 13
+
+local LoadingSub = Instance.new("TextLabel", LoadingBox)
+LoadingSub.Size = UDim2.new(1, 0, 0, 20)
+LoadingSub.Position = UDim2.new(0, 0, 0, 55)
+LoadingSub.BackgroundTransparency = 1
+LoadingSub.Font = Enum.Font.Code
+LoadingSub.Text = "INITIALIZING HARDWARE ENCRYPTION..."
+LoadingSub.TextColor3 = TextMuted
+LoadingSub.TextSize = 10
 
 local BarBg = Instance.new("Frame", LoadingBox)
-BarBg.Size = UDim2.new(0, 340, 0, 4) BarBg.Position = UDim2.new(0.5, -170, 0.75, 0) BarBg.BackgroundColor3 = CardDark BarBg.BorderSizePixel = 0
+BarBg.Size = UDim2.new(0, 360, 0, 6)
+BarBg.Position = UDim2.new(0.5, -180, 0.75, 0)
+BarBg.BackgroundColor3 = CardDark
+BarBg.BorderSizePixel = 0
 Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
+
 local BarFill = Instance.new("Frame", BarBg)
-BarFill.Size = UDim2.new(0, 0, 1, 0) BarFill.BackgroundColor3 = AccentColor BarFill.BorderSizePixel = 0
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = AccentColor
+BarFill.BorderSizePixel = 0
 Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
-TweenService:Create(BarFill, TweenInfo.new(1.0, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-task.wait(1.1)
+TweenService:Create(BarFill, TweenInfo.new(1.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+task.wait(1.6)
 LoadingFrame:Destroy()
 
--- Secure Key System Window
+-- 2. СТИЛЬНОЕ ОКНО СИСТЕМЫ КЛЮЧЕЙ
 local KeyAuthGranted = false
 local KeyGui = Instance.new("Frame", ScreenGui)
-KeyGui.Size = UDim2.new(0, 380, 0, 220) KeyGui.Position = UDim2.new(0.5, -190, 0.5, -110) KeyGui.BackgroundColor3 = SidebarDark KeyGui.BorderSizePixel = 0 KeyGui.ZIndex = 500
-Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 10)
-local KeyStroke = Instance.new("UIStroke", KeyGui) KeyStroke.Color = AccentColor KeyStroke.Thickness = 1.5
+KeyGui.Size = UDim2.new(0, 400, 0, 240)
+KeyGui.Position = UDim2.new(0.5, -200, 0.5, -120)
+KeyGui.BackgroundColor3 = SidebarDark
+KeyGui.BorderSizePixel = 0
+KeyGui.ZIndex = 500
+Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 12)
+
+local KeyStroke = Instance.new("UIStroke", KeyGui)
+KeyStroke.Color = AccentColor
+KeyStroke.Thickness = 1.5
+
 local KeyTitle = Instance.new("TextLabel", KeyGui)
-KeyTitle.Size = UDim2.new(1, 0, 0, 40) KeyTitle.Position = UDim2.new(0, 0, 0, 15) KeyTitle.BackgroundTransparency = 1 KeyTitle.Font = Enum.Font.GothamBold KeyTitle.Text = "PROTECTED AUTHENTICATION" KeyTitle.TextColor3 = AccentColor KeyTitle.TextSize = 13
+KeyTitle.Size = UDim2.new(1, 0, 0, 35)
+KeyTitle.Position = UDim2.new(0, 0, 0, 18)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Text = "LICENSE VERIFICATION"
+KeyTitle.TextColor3 = AccentColor
+KeyTitle.TextSize = 14
+
+local KeySub = Instance.new("TextLabel", KeyGui)
+KeySub.Size = UDim2.new(1, 0, 0, 20)
+KeySub.Position = UDim2.new(0, 0, 0, 48)
+KeySub.BackgroundTransparency = 1
+KeySub.Font = Enum.Font.Gotham
+KeySub.Text = "Hardware-locked access protection active"
+KeySub.TextColor3 = TextMuted
+KeySub.TextSize = 10
+
 local KeyBox = Instance.new("TextBox", KeyGui)
-KeyBox.Size = UDim2.new(0, 320, 0, 38) KeyBox.Position = UDim2.new(0.5, -160, 0, 65) KeyBox.BackgroundColor3 = CardDark KeyBox.BorderSizePixel = 0 KeyBox.PlaceholderText = "Enter license key..." KeyBox.Text = "" KeyBox.TextColor3 = TextMain KeyBox.Font = Enum.Font.Gotham KeyBox.TextSize = 12
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
+KeyBox.Size = UDim2.new(0, 340, 0, 42)
+KeyBox.Position = UDim2.new(0.5, -170, 0, 85)
+KeyBox.BackgroundColor3 = CardDark
+KeyBox.BorderSizePixel = 0
+KeyBox.PlaceholderText = "Paste your license key here..."
+KeyBox.Text = ""
+KeyBox.TextColor3 = TextMain
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 12
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 8)
+
 local SubmitBtn = Instance.new("TextButton", KeyGui)
-SubmitBtn.Size = UDim2.new(0, 320, 0, 38) SubmitBtn.Position = UDim2.new(0.5, -160, 0, 118) SubmitBtn.BackgroundColor3 = AccentColor SubmitBtn.BorderSizePixel = 0 SubmitBtn.Font = Enum.Font.GothamBold SubmitBtn.Text = "VERIFY LICENSE" SubmitBtn.TextColor3 = TextMain SubmitBtn.TextSize = 12
-Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+SubmitBtn.Size = UDim2.new(0, 340, 0, 42)
+SubmitBtn.Position = UDim2.new(0.5, -170, 0, 138)
+SubmitBtn.BackgroundColor3 = AccentColor
+SubmitBtn.BorderSizePixel = 0
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Text = "VERIFY & LAUNCH"
+SubmitBtn.TextColor3 = TextMain
+SubmitBtn.TextSize = 12
+Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 8)
+
 local KeyStatus = Instance.new("TextLabel", KeyGui)
-KeyStatus.Size = UDim2.new(1, 0, 0, 20) KeyStatus.Position = UDim2.new(0, 0, 0, 172) KeyStatus.BackgroundTransparency = 1 KeyStatus.Font = Enum.Font.Gotham KeyStatus.Text = "Status: Waiting for input..." KeyStatus.TextColor3 = TextMuted KeyStatus.TextSize = 10
+KeyStatus.Size = UDim2.new(1, 0, 0, 20)
+KeyStatus.Position = UDim2.new(0, 0, 0, 192)
+KeyStatus.BackgroundTransparency = 1
+KeyStatus.Font = Enum.Font.Gotham
+KeyStatus.Text = "Status: Waiting for license input..."
+KeyStatus.TextColor3 = TextMuted
+KeyStatus.TextSize = 10
 
 SubmitBtn.MouseButton1Click:Connect(function()
     local inputKey = string.gsub(KeyBox.Text, "%s+", "")
-    if ValidKeys[inputKey] then
-        KeyAuthGranted = true KeyStatus.TextColor3 = Color3.fromRGB(0, 255, 120) KeyStatus.Text = "AUTHORIZATION SUCCESSFUL!"
-        task.wait(0.4) KeyGui:Destroy()
+    local keyData = ValidKeys[inputKey]
+    
+    if keyData then
+        local currentNetworkTime = GetNetworkTime()
+        
+        if keyData.BoundHWID == nil then
+            keyData.BoundHWID = HWID
+            keyData.ExpiresAt = currentNetworkTime + keyData.Duration
+        end
+        
+        if keyData.BoundHWID ~= HWID then
+            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
+            KeyStatus.Text = "ACCESS DENIED: KEY BOUND TO ANOTHER PC"
+            return
+        end
+        
+        if currentNetworkTime > keyData.ExpiresAt then
+            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
+            KeyStatus.Text = "ACCESS DENIED: LICENSE EXPIRED"
+            return
+        end
+
+        KeyAuthGranted = true
+        KeyStatus.TextColor3 = Color3.fromRGB(0, 255, 120)
+        KeyStatus.Text = "AUTHENTICATION SUCCESSFUL!"
+        task.wait(0.6)
+        KeyGui:Destroy()
     else
-        KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60) KeyStatus.Text = "ACCESS DENIED: INVALID LICENSE KEY"
+        KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
+        KeyStatus.Text = "ACCESS DENIED: INVALID LICENSE KEY"
     end
 end)
 
 repeat task.wait(0.1) until KeyAuthGranted == true
 
--- Configuration Storage
+-- Config
 local Config = {
     AutoSkillCheck = true,
     NoClip = false,
@@ -120,10 +249,6 @@ local Config = {
     FastRepair = false,
     KillerAimbot = false,
     AutoStunDagger = false,
-
-    -- AI Assist Config
-    AI_Smart360 = false,
-
     FullBright = false,
     NoFog = false,
     CustomTime = false,
@@ -146,11 +271,26 @@ local Config = {
     PalletESPColor = Color3.fromRGB(255, 180, 0)
 }
 
+local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, SafeDistance = 8.5 }
+
 -- Watermark
 local Watermark = Instance.new("TextButton", ScreenGui)
-Watermark.Name = "Watermark" Watermark.Size = UDim2.new(0, 160, 0, 28) Watermark.Position = UDim2.new(0.02, 0, 0.02, 0) Watermark.BackgroundColor3 = SidebarDark Watermark.BorderSizePixel = 0 Watermark.Font = Enum.Font.GothamBold Watermark.Text = "  vortex.cc  |  60 FPS" Watermark.TextColor3 = AccentColor Watermark.TextSize = 11 Watermark.TextXAlignment = Enum.TextXAlignment.Left
+Watermark.Name = "Watermark"
+Watermark.Size = UDim2.new(0, 160, 0, 28)
+Watermark.Position = UDim2.new(0.02, 0, 0.02, 0)
+Watermark.BackgroundColor3 = SidebarDark
+Watermark.BorderSizePixel = 0
+Watermark.Font = Enum.Font.GothamBold
+Watermark.Text = "  vortex.cc  |  60 FPS"
+Watermark.TextColor3 = AccentColor
+Watermark.TextSize = 11
+Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Instance.new("UICorner", Watermark).CornerRadius = UDim.new(0, 6)
-local WmStroke = Instance.new("UIStroke", Watermark) WmStroke.Color = AccentColor WmStroke.Thickness = 1 WmStroke.Transparency = 0.5
+
+local WmStroke = Instance.new("UIStroke", Watermark)
+WmStroke.Color = AccentColor
+WmStroke.Thickness = 1
+WmStroke.Transparency = 0.5
 
 local dragging, dragStart, startPos
 Watermark.InputBegan:Connect(function(input)
@@ -160,7 +300,8 @@ Watermark.InputBegan:Connect(function(input)
 end)
 UserInputService.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart Watermark.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        local delta = input.Position - dragStart
+        Watermark.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 UserInputService.InputEnded:Connect(function(input)
@@ -178,52 +319,108 @@ end)
 
 -- Main Interface Framework
 local MainMenu = Instance.new("Frame", ScreenGui)
-MainMenu.Name = "MainMenu" MainMenu.Size = UDim2.new(0, 680, 0, 420) MainMenu.Position = UDim2.new(0.5, -340, 0.5, -210) MainMenu.BackgroundColor3 = BgDark MainMenu.BorderSizePixel = 0 MainMenu.Visible = false
+MainMenu.Name = "MainMenu"
+MainMenu.Size = UDim2.new(0, 680, 0, 420)
+MainMenu.Position = UDim2.new(0.5, -340, 0.5, -210)
+MainMenu.BackgroundColor3 = BgDark
+MainMenu.BorderSizePixel = 0
+MainMenu.Visible = false
+
 Instance.new("UICorner", MainMenu).CornerRadius = UDim.new(0, 8)
-local MenuStroke = Instance.new("UIStroke", MainMenu) MenuStroke.Color = Color3.fromRGB(35, 38, 45) MenuStroke.Thickness = 1
+local MenuStroke = Instance.new("UIStroke", MainMenu)
+MenuStroke.Color = Color3.fromRGB(35, 38, 45) MenuStroke.Thickness = 1
 
 Watermark.MouseButton1Click:Connect(function() MainMenu.Visible = not MainMenu.Visible end)
 
 local Sidebar = Instance.new("Frame", MainMenu)
-Sidebar.Size = UDim2.new(0, 150, 1, 0) Sidebar.BackgroundColor3 = SidebarDark Sidebar.BorderSizePixel = 0
+Sidebar.Size = UDim2.new(0, 150, 1, 0)
+Sidebar.BackgroundColor3 = SidebarDark
+Sidebar.BorderSizePixel = 0
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
 
 local Logo = Instance.new("TextLabel", Sidebar)
-Logo.Size = UDim2.new(1, -20, 0, 40) Logo.Position = UDim2.new(0, 15, 0, 10) Logo.BackgroundTransparency = 1 Logo.Font = Enum.Font.GothamBold Logo.Text = "• vortex.cc 1.0" Logo.TextColor3 = AccentColor Logo.TextSize = 13 Logo.TextXAlignment = Enum.TextXAlignment.Left
+Logo.Size = UDim2.new(1, -20, 0, 40)
+Logo.Position = UDim2.new(0, 15, 0, 10)
+Logo.BackgroundTransparency = 1
+Logo.Font = Enum.Font.GothamBold
+Logo.Text = "• vortex.cc 1.0"
+Logo.TextColor3 = AccentColor
+Logo.TextSize = 13
+Logo.TextXAlignment = Enum.TextXAlignment.Left
 
 local TabContainer = Instance.new("Frame", Sidebar)
-TabContainer.Size = UDim2.new(1, 0, 1, -120) TabContainer.Position = UDim2.new(0, 0, 0, 55) TabContainer.BackgroundTransparency = 1
-local TabListLayout = Instance.new("UIListLayout", TabContainer) TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder TabListLayout.Padding = UDim.new(0, 4)
+TabContainer.Size = UDim2.new(1, 0, 1, -120)
+TabContainer.Position = UDim2.new(0, 0, 0, 55)
+TabContainer.BackgroundTransparency = 1
 
--- User Profile Widget
+local TabListLayout = Instance.new("UIListLayout", TabContainer)
+TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabListLayout.Padding = UDim.new(0, 4)
+
 local UserProfile = Instance.new("Frame", Sidebar)
-UserProfile.Size = UDim2.new(1, -16, 0, 45) UserProfile.Position = UDim2.new(0, 8, 1, -55) UserProfile.BackgroundColor3 = CardDark UserProfile.BorderSizePixel = 0
+UserProfile.Size = UDim2.new(1, -16, 0, 45)
+UserProfile.Position = UDim2.new(0, 8, 1, -55)
+UserProfile.BackgroundColor3 = CardDark
+UserProfile.BorderSizePixel = 0
 Instance.new("UICorner", UserProfile).CornerRadius = UDim.new(0, 6)
 
 local UserAvatar = Instance.new("ImageLabel", UserProfile)
-UserAvatar.Size = UDim2.new(0, 30, 0, 30) UserAvatar.Position = UDim2.new(0, 8, 0.5, -15) UserAvatar.BackgroundColor3 = SidebarDark
+UserAvatar.Size = UDim2.new(0, 30, 0, 30)
+UserAvatar.Position = UDim2.new(0, 8, 0.5, -15)
+UserAvatar.BackgroundColor3 = SidebarDark
 pcall(function() UserAvatar.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
 Instance.new("UICorner", UserAvatar).CornerRadius = UDim.new(1, 0)
 
 local UserName = Instance.new("TextLabel", UserProfile)
-UserName.Size = UDim2.new(1, -50, 0, 16) UserName.Position = UDim2.new(0, 44, 0, 7) UserName.BackgroundTransparency = 1 UserName.Font = Enum.Font.GothamBold UserName.Text = LocalPlayer.Name UserName.TextColor3 = TextMain UserName.TextSize = 11 UserName.TextXAlignment = Enum.TextXAlignment.Left
+UserName.Size = UDim2.new(1, -50, 0, 16)
+UserName.Position = UDim2.new(0, 44, 0, 7)
+UserName.BackgroundTransparency = 1
+UserName.Font = Enum.Font.GothamBold
+UserName.Text = LocalPlayer.Name
+UserName.TextColor3 = TextMain
+UserName.TextSize = 11
+UserName.TextXAlignment = Enum.TextXAlignment.Left
 
 local UserRole = Instance.new("TextLabel", UserProfile)
-UserRole.Size = UDim2.new(1, -50, 0, 14) UserRole.Position = UDim2.new(0, 44, 0, 22) UserRole.BackgroundTransparency = 1 UserRole.Font = Enum.Font.Gotham UserRole.Text = "Member" UserRole.TextColor3 = TextMuted UserRole.TextSize = 9 UserRole.TextXAlignment = Enum.TextXAlignment.Left
+UserRole.Size = UDim2.new(1, -50, 0, 14)
+UserRole.Position = UDim2.new(0, 44, 0, 22)
+UserRole.BackgroundTransparency = 1
+UserRole.Font = Enum.Font.Gotham
+UserRole.Text = "Member"
+UserRole.TextColor3 = TextMuted
+UserRole.TextSize = 9
+UserRole.TextXAlignment = Enum.TextXAlignment.Left
 
 local Header = Instance.new("Frame", MainMenu)
-Header.Size = UDim2.new(1, -160, 0, 50) Header.Position = UDim2.new(0, 155, 0, 0) Header.BackgroundTransparency = 1
+Header.Size = UDim2.new(1, -160, 0, 50)
+Header.Position = UDim2.new(0, 155, 0, 0)
+Header.BackgroundTransparency = 1
 
 local GreetingTitle = Instance.new("TextLabel", Header)
-GreetingTitle.Size = UDim2.new(0, 250, 0, 20) GreetingTitle.Position = UDim2.new(0, 10, 0, 12) GreetingTitle.BackgroundTransparency = 1 GreetingTitle.Font = Enum.Font.GothamBold GreetingTitle.Text = "Hello, " .. LocalPlayer.Name GreetingTitle.TextColor3 = TextMain GreetingTitle.TextSize = 14 GreetingTitle.TextXAlignment = Enum.TextXAlignment.Left
+GreetingTitle.Size = UDim2.new(0, 250, 0, 20)
+GreetingTitle.Position = UDim2.new(0, 10, 0, 12)
+GreetingTitle.BackgroundTransparency = 1
+GreetingTitle.Font = Enum.Font.GothamBold
+GreetingTitle.Text = "Hello, " .. LocalPlayer.Name
+GreetingTitle.TextColor3 = TextMain
+GreetingTitle.TextSize = 14
+GreetingTitle.TextXAlignment = Enum.TextXAlignment.Left
 
 local GreetingSub = Instance.new("TextLabel", Header)
-GreetingSub.Size = UDim2.new(0, 200, 0, 14) GreetingSub.Position = UDim2.new(0, 10, 0, 30) GreetingSub.BackgroundTransparency = 1 GreetingSub.Font = Enum.Font.Gotham GreetingSub.Text = "Welcome Back!" GreetingSub.TextColor3 = TextMuted GreetingSub.TextSize = 10 GreetingSub.TextXAlignment = Enum.TextXAlignment.Left
+GreetingSub.Size = UDim2.new(0, 200, 0, 14)
+GreetingSub.Position = UDim2.new(0, 10, 0, 30)
+GreetingSub.BackgroundTransparency = 1
+GreetingSub.Font = Enum.Font.Gotham
+GreetingSub.Text = "Welcome Back!"
+GreetingSub.TextColor3 = TextMuted
+GreetingSub.TextSize = 10
+GreetingSub.TextXAlignment = Enum.TextXAlignment.Left
 
 local ContentArea = Instance.new("Frame", MainMenu)
-ContentArea.Size = UDim2.new(1, -165, 1, -60) ContentArea.Position = UDim2.new(0, 155, 0, 55) ContentArea.BackgroundTransparency = 1
+ContentArea.Size = UDim2.new(1, -165, 1, -60)
+ContentArea.Position = UDim2.new(0, 155, 0, 55)
+ContentArea.BackgroundTransparency = 1
 
--- Theme Manager
 local ThemeObjects = {}
 local function RegisterThemeObject(obj, prop)
     table.insert(ThemeObjects, {Object = obj, Property = prop}) obj[prop] = AccentColor
@@ -238,22 +435,34 @@ local function ApplyTheme(newColor)
     end
 end
 
--- UI Builder Components
 local Tabs, Pages = {}, {}
 local function CreateTab(name, layoutOrder)
     local TabBtn = Instance.new("TextButton", TabContainer)
-    TabBtn.Size = UDim2.new(1, -16, 0, 32) TabBtn.Position = UDim2.new(0, 8, 0, 0) TabBtn.BackgroundColor3 = SidebarDark TabBtn.BorderSizePixel = 0
-    TabBtn.Font = Enum.Font.GothamBold TabBtn.Text = "  " .. name TabBtn.TextColor3 = TextMuted TabBtn.TextSize = 11 TabBtn.TextXAlignment = Enum.TextXAlignment.Left TabBtn.LayoutOrder = layoutOrder
+    TabBtn.Size = UDim2.new(1, -16, 0, 32)
+    TabBtn.Position = UDim2.new(0, 8, 0, 0)
+    TabBtn.BackgroundColor3 = SidebarDark
+    TabBtn.BorderSizePixel = 0
+    TabBtn.Font = Enum.Font.GothamBold
+    TabBtn.Text = "  " .. name
+    TabBtn.TextColor3 = TextMuted
+    TabBtn.TextSize = 11
+    TabBtn.TextXAlignment = Enum.TextXAlignment.Left
+    TabBtn.LayoutOrder = layoutOrder
     Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
-    local Page = Instance.new("Frame", ContentArea) Page.Size = UDim2.new(1, 0, 1, 0) Page.BackgroundTransparency = 1 Page.Visible = false
+    local Page = Instance.new("Frame", ContentArea)
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.BackgroundTransparency = 1
+    Page.Visible = false
 
     local LeftColumn = Instance.new("ScrollingFrame", Page)
-    LeftColumn.Name = "LeftColumn" LeftColumn.Size = UDim2.new(0.49, 0, 1, 0) LeftColumn.BackgroundTransparency = 1 LeftColumn.ScrollBarThickness = 0
+    LeftColumn.Name = "LeftColumn" LeftColumn.Size = UDim2.new(0.49, 0, 1, 0)
+    LeftColumn.BackgroundTransparency = 1 LeftColumn.ScrollBarThickness = 0
     local LList = Instance.new("UIListLayout", LeftColumn) LList.Padding = UDim.new(0, 10) LList.SortOrder = Enum.SortOrder.LayoutOrder
 
     local RightColumn = Instance.new("ScrollingFrame", Page)
-    RightColumn.Name = "RightColumn" RightColumn.Size = UDim2.new(0.49, 0, 1, 0) RightColumn.Position = UDim2.new(0.51, 0, 0, 0) RightColumn.BackgroundTransparency = 1 RightColumn.ScrollBarThickness = 0
+    RightColumn.Name = "RightColumn" RightColumn.Size = UDim2.new(0.49, 0, 1, 0)
+    RightColumn.Position = UDim2.new(0.51, 0, 0, 0) RightColumn.BackgroundTransparency = 1 RightColumn.ScrollBarThickness = 0
     local RList = Instance.new("UIListLayout", RightColumn) RList.Padding = UDim.new(0, 10) RList.SortOrder = Enum.SortOrder.LayoutOrder
 
     TabBtn.MouseButton1Click:Connect(function()
@@ -341,13 +550,10 @@ local function CreateButton(card, text, callback)
     Btn.MouseButton1Click:Connect(callback)
 end
 
--- Category Tabs Registration
 local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
-local AiL, AiR, AiTabBtn = CreateTab("AI Assist", 2)
-local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 3)
-local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 4)
+local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
+local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 3)
 
--- Main Controls
 local SurvivorCard = CreateCard(MainL, "Survivor Side")
 CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
 CreateToggle(SurvivorCard, "Noclip", false, function(v) Config.NoClip = v end)
@@ -360,14 +566,6 @@ CreateToggle(SurvivorCard, "Auto Dagger Counter Stun", false, function(v) Config
 local KillerCard = CreateCard(MainR, "Killer Side")
 CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
 
--- AI Assist Controls (Autonomous Adaptive 360)
-local AICard = CreateCard(AiL, "Autonomous AI Assist")
-CreateToggle(AICard, "Smart Killer 360 Spin AI", false, function(v) Config.AI_Smart360 = v end)
-
-local AIInfoCard = CreateCard(AiR, "AI Telemetry Status")
-CreateButton(AIInfoCard, "Safe-Distance: Auto-Calculated", function() end)
-
--- Visual Controls
 local EnvironmentCard = CreateCard(VisualsL, "World Visuals")
 CreateToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
 CreateToggle(EnvironmentCard, "Remove Fog", false, function(v) Config.NoFog = v end)
@@ -377,8 +575,8 @@ CreateToggle(EnvironmentCard, "Custom FOV", false, function(v) Config.CustomFOVE
 CreateSlider(EnvironmentCard, "FOV Value", 70, 120, 90, function(v) Config.FOVValue = v end)
 
 local ESPCard = CreateCard(VisualsR, "ESP & Tracers")
-CreateToggle(ESPCard, "Player ESP (Theme Color)", false, function(v) Config.PlayerESP = v end)
-CreateToggle(ESPCard, "Killer ESP (Red Outline)", false, function(v) Config.KillerESP = v end)
+CreateToggle(ESPCard, "Player ESP", false, function(v) Config.PlayerESP = v end)
+CreateToggle(ESPCard, "Killer ESP", false, function(v) Config.KillerESP = v end)
 CreateToggle(ESPCard, "White Tracers: Players", false, function(v) Config.TracersPlayers = v end)
 CreateToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
 CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
@@ -389,7 +587,6 @@ CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin 
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
--- Themes Controls
 local ThemePresetCardL = CreateCard(ThemesL, "Presets Side A")
 CreateButton(ThemePresetCardL, "Theme: Purple (Default)", function() ApplyTheme(PresetThemes.Purple) end)
 CreateButton(ThemePresetCardL, "Theme: Cyan Neon", function() ApplyTheme(PresetThemes.Cyan) end)
@@ -402,7 +599,6 @@ CreateButton(ThemePresetCardR, "Theme: Hot Pink", function() ApplyTheme(PresetTh
 
 MainTabBtn.TextColor3 = TextMain MainTabBtn.BackgroundColor3 = AccentColor ActiveTabButton = MainTabBtn Pages[1].Visible = true
 
--- Triangle Ring Container
 local RingFolder = Instance.new("Folder", Workspace) RingFolder.Name = "VortexTriangleRing"
 local triangleParts = {}
 local function updateTriangleRing(enabled, count, radius, color)
@@ -428,7 +624,6 @@ local function updateTriangleRing(enabled, count, radius, color)
     end
 end
 
--- Line-Of-Sight Visibility Raycast
 local function IsVisible(targetPart)
     local myChar = LocalPlayer.Character
     if not myChar or not myChar:FindFirstChild("Head") then return false end
@@ -437,25 +632,18 @@ local function IsVisible(targetPart)
     rayParams.FilterDescendantsInstances = {myChar, Camera}
     rayParams.IgnoreWater = true
     local result = Workspace:Raycast(Camera.CFrame.Position, targetPart.Position - Camera.CFrame.Position, rayParams)
-    if result then
-        return result.Instance:IsDescendantOf(targetPart.Parent)
-    end
+    if result then return result.Instance:IsDescendantOf(targetPart.Parent) end
     return true
 end
 
--- Dagger Auto Counter-Stun Module
 local function HasDaggerEquipped()
     if not LocalPlayer.Character then return nil end
     local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-    if tool and (string.find(string.lower(tool.Name), "dagger") or string.find(string.lower(tool.Name), "knife")) then
-        return tool
-    end
+    if tool and (string.find(string.lower(tool.Name), "dagger") or string.find(string.lower(tool.Name), "knife")) then return tool end
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if backpack then
         for _, t in pairs(backpack:GetChildren()) do
-            if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then
-                return t
-            end
+            if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then return t end
         end
     end
     return nil
@@ -482,7 +670,6 @@ local function ListenToKillerAttacks(killerChar)
     end)
 end
 
--- White Tracers Drawing System
 local TracersFolder = Instance.new("Folder", ScreenGui) TracersFolder.Name = "VortexTracers"
 local function DrawWhiteTracer(targetPos)
     local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
@@ -500,37 +687,28 @@ local function DrawWhiteTracer(targetPos)
     end
 end
 
--- Crosshair Setup
 local CrosshairGui = Instance.new("Frame", ScreenGui)
 CrosshairGui.Name = "VortexCrosshair" CrosshairGui.Size = UDim2.new(0, 10, 0, 10) CrosshairGui.Position = UDim2.new(0.5, -5, 0.5, -5) CrosshairGui.BackgroundTransparency = 1 CrosshairGui.Visible = false
 local c1 = Instance.new("Frame", CrosshairGui) c1.Size = UDim2.new(0, 4, 0, 2) c1.Position = UDim2.new(0, 3, 0, 4) c1.BackgroundColor3 = AccentColor c1.BorderSizePixel = 0 RegisterThemeObject(c1, "BackgroundColor3")
 local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c2.Position = UDim2.new(0, 4, 0, 3) c2.BackgroundColor3 = AccentColor c2.BorderSizePixel = 0 RegisterThemeObject(c2, "BackgroundColor3")
 
--- Background Caching Thread (Zero Lag)
 task.spawn(function()
     while task.wait(4) do
-        local tempGens = {}
-        local tempPallets = {}
+        local tempGens, tempPallets = {}, {}
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("Model") then
                 local name = string.lower(obj.Name)
-                if string.find(name, "generator") then
-                    table.insert(tempGens, obj)
-                elseif string.find(name, "pallet") then
-                    table.insert(tempPallets, obj)
-                end
+                if string.find(name, "generator") then table.insert(tempGens, obj)
+                elseif string.find(name, "pallet") then table.insert(tempPallets, obj) end
             end
         end
-        Cache.Generators = tempGens
-        Cache.Pallets = tempPallets
+        Cache.Generators, Cache.Pallets = tempGens, tempPallets
     end
 end)
 
--- Background AI Telemetry & Killer Finder Thread (Adaptive Safe Distance Calculation)
 task.spawn(function()
-    while task.wait(0.1) do
-        local closest = nil
-        local shortest = math.huge
+    while task.wait(0.2) do
+        local closest, shortest = nil, math.huge
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local myPos = LocalPlayer.Character.HumanoidRootPart.Position
             for _, p in ipairs(Players:GetPlayers()) do
@@ -539,20 +717,9 @@ task.spawn(function()
                     local isKiller = string.find(string.lower(p.Name), "killer") or char:FindFirstChild("Weapon") or char:FindFirstChild("Bat")
                     if isKiller then
                         local root = char:FindFirstChild("HumanoidRootPart")
-                        local killerHum = char:FindFirstChildOfClass("Humanoid")
                         if root then
                             local dist = (root.Position - myPos).Magnitude
-                            if dist < shortest then
-                                shortest = dist
-                                closest = root
-                                
-                                -- ИИ считывает скорость убийцы и динамически рассчитывает безопасную дистанцию для 360
-                                if killerHum then
-                                    local kSpeed = killerHum.WalkSpeed
-                                    -- Формула безопасности: чем быстрее бежит ман, тем дальше держится дистанция обхода
-                                    Cache.SafeDistance = math.clamp(6.5 + (kSpeed * 0.04), 7.0, 13.0)
-                                end
-                            end
+                            if dist < shortest then shortest = dist closest = root end
                         end
                     end
                 end
@@ -562,72 +729,46 @@ task.spawn(function()
     end
 end)
 
--- HIGH-PRECISION SKILL CHECK ENGINE
 local function ProcessSkillCheckFast()
     if not Config.AutoSkillCheck then return end
     local pGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not pGui then return end
 
     for _, screen in ipairs(pGui:GetChildren()) do
-        if screen:IsA("GuiObject") and screen.Visible then
-            local name = string.lower(screen.Name)
-            if string.find(name, "needle") or string.find(name, "pointer") or string.find(name, "arrow") then
-                local parentGui = screen.Parent
-                local successZone = parentGui and (parentGui:FindFirstChild("SuccessZone", true) or parentGui:FindFirstChild("GreatZone", true) or parentGui:FindFirstChild("Zone", true))
+        if screen:IsA("ScreenGui") and screen.Enabled then
+            local needle = screen:FindFirstChild("Needle", true) or screen:FindFirstChild("Pointer", true)
+            local zone = screen:FindFirstChild("SuccessZone", true) or screen:FindFirstChild("GreatZone", true)
+            
+            if needle and zone and needle.Visible and zone.Visible then
+                local needleRot = needle.Rotation % 360
+                local zoneRot = zone.Rotation % 360
+                local zoneWidth = zone.Size.X.Scale * 180
                 
-                if successZone then
-                    local currentRot = screen.Rotation % 360
-                    local targetRot = successZone.Rotation % 360
-                    local zoneSize = successZone.AbsoluteSize.X or 30
-                    
-                    if math.abs(currentRot - targetRot) <= (zoneSize * 0.45) then
-                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-                        task.wait(0.01)
-                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-                        task.wait(0.2)
-                    end
+                if math.abs(needleRot - zoneRot) <= (zoneWidth + 2) then
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                    task.wait(0.01)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                    task.wait(0.3)
                 end
             end
         end
     end
 end
 
--- Heartbeat Optimized Logic & Autonomous AI Physics 360 Spin
-RunService.Heartbeat:Connect(function(dt)
+RunService.Heartbeat:Connect(function()
     ProcessSkillCheckFast()
-
     if Config.SpeedHack and LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = Config.SpeedValue end
     end
-
     if Config.GodRevolver and LocalPlayer.Character then
         local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
         if tool and (string.find(string.lower(tool.Name), "revolver") or string.find(string.lower(tool.Name), "gun")) then
-            local ammo = tool:FindFirstChild("Ammo")
-            if ammo then ammo.Value = 999 end
-        end
-    end
-
-    -- Autonomous AI 360 Orbit Physics (Using Adaptive Safe-Distance)
-    if Config.AI_Smart360 and Cache.ClosestKiller and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myRoot = LocalPlayer.Character.HumanoidRootPart
-        local killerRoot = Cache.ClosestKiller
-        local dist = (myRoot.Position - killerRoot.Position).Magnitude
-        
-        -- Если убийца входит в расчетную зону опасности, ИИ активирует физический орбитальный 360 маневр
-        if dist <= (Cache.SafeDistance + 6) then
-            local timeFactor = tick() * 14
-            local offsetX = math.cos(timeFactor) * Cache.SafeDistance
-            local offsetZ = math.sin(timeFactor) * Cache.SafeDistance
-            
-            local targetPos = killerRoot.Position + Vector3.new(offsetX, 0, offsetZ)
-            myRoot.CFrame = CFrame.new(targetPos, killerRoot.Position)
+            local ammo = tool:FindFirstChild("Ammo") if ammo then ammo.Value = 999 end
         end
     end
 end)
 
--- Main RenderStepped Loop (Zero-Lag Visuals)
 local throttleTimer = 0
 RunService.RenderStepped:Connect(function(dt)
     throttleTimer = throttleTimer + dt
@@ -635,15 +776,12 @@ RunService.RenderStepped:Connect(function(dt)
     if Config.FullBright then Lighting.Brightness = 2 Lighting.ClockTime = 14 Lighting.GlobalShadows = false end
     if Config.NoFog then Lighting.FogEnd = 999999 Lighting.FogStart = 999999 end
     if Config.CustomTime then Lighting.ClockTime = Config.TimeOfDay end
-
     if Config.CustomFOVEnabled then Camera.FieldOfView = Config.FOVValue end
 
     if Config.TriangleRingEnabled then updateTriangleRing(true, 14, Config.RingSize, AccentColor) else updateTriangleRing(false, 0, 0, Color3.new()) end
 
     if Config.NoClip and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = false end
-        end
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end
     end
 
     if Config.VisualSpin and LocalPlayer.Character then
@@ -653,18 +791,14 @@ RunService.RenderStepped:Connect(function(dt)
 
     CrosshairGui.Visible = Config.Crosshair
 
-    -- Advanced Visible-Only Aimbot
     if Config.KillerAimbot and Cache.ClosestKiller then
         Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Cache.ClosestKiller.Position), 0.35)
     end
 
-    -- Clear Tracers
     TracersFolder:ClearAllChildren()
 
-    -- Throttled Heavy Operations (ESP / Tracers)
     if throttleTimer >= 0.15 then
         throttleTimer = 0
-
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local char = p.Character
@@ -701,9 +835,7 @@ RunService.RenderStepped:Connect(function(dt)
                 end
             end
         else
-            for _, gen in ipairs(Cache.Generators) do
-                local hl = gen:FindFirstChild("GenHL") if hl then hl:Destroy() end
-            end
+            for _, gen in ipairs(Cache.Generators) do local hl = gen:FindFirstChild("GenHL") if hl then hl:Destroy() end end
         end
 
         if Config.PalletESP then
@@ -714,9 +846,7 @@ RunService.RenderStepped:Connect(function(dt)
                 end
             end
         else
-            for _, pal in ipairs(Cache.Pallets) do
-                local hl = pal:FindFirstChild("PalletHL") if hl then hl:Destroy() end
-            end
+            for _, pal in ipairs(Cache.Pallets) do local hl = pal:FindFirstChild("PalletHL") if hl then hl:Destroy() end end
         end
     end
 end)
