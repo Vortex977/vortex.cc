@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Ultimate Zero-Lag Performance Edition
+    Vortex Hub // Region of Violence (VD) - Pure White Theme & Crisp Watermark Edition
     Author: TWKS
 ]]--
 
@@ -53,31 +53,24 @@ local ValidKeys = {
     ["admin2013"] = { Duration = 999999999, BoundHWID = nil }
 }
 
-local PresetThemes = {
-    Purple = Color3.fromRGB(170, 0, 255),
-    Cyan = Color3.fromRGB(0, 225, 255),
-    Green = Color3.fromRGB(0, 255, 120),
-    Red = Color3.fromRGB(255, 50, 50),
-    Orange = Color3.fromRGB(255, 150, 0),
-    Pink = Color3.fromRGB(255, 100, 200)
-}
-local AccentColor = PresetThemes.Purple
+-- ФУЛЛ БЕЛАЯ ТЕМА (Pure White)
+local AccentColor = Color3.fromRGB(255, 255, 255)
 
-local BgDark = Color3.fromRGB(10, 11, 15)
-local SidebarDark = Color3.fromRGB(15, 17, 22)
-local CardDark = Color3.fromRGB(20, 22, 29)
-local TextMain = Color3.fromRGB(245, 245, 250)
-local TextMuted = Color3.fromRGB(120, 125, 135)
+local BgDark = Color3.fromRGB(15, 15, 18)
+local SidebarDark = Color3.fromRGB(22, 22, 26)
+local CardDark = Color3.fromRGB(28, 28, 34)
+local TextMain = Color3.fromRGB(255, 255, 255)
+local TextMuted = Color3.fromRGB(160, 160, 170)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexHubUltraOptimized"
+ScreenGui.Name = "VortexHubWhiteEdition"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
--- ULTRA PREMIER LOADING SCREEN
+-- LOADING SCREEN
 local LoadingFrame = Instance.new("Frame", ScreenGui)
 LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
 LoadingFrame.BackgroundColor3 = BgDark
@@ -89,19 +82,19 @@ LoadingBox.Size = UDim2.new(0, 460, 0, 190)
 LoadingBox.Position = UDim2.new(0.5, -230, 0.5, -95)
 LoadingBox.BackgroundColor3 = SidebarDark
 LoadingBox.BorderSizePixel = 0
-Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 14)
+Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 10)
 
 local BoxGlow = Instance.new("UIStroke", LoadingBox)
 BoxGlow.Color = AccentColor
-BoxGlow.Thickness = 2
-BoxGlow.Transparency = 0.3
+BoxGlow.Thickness = 1.2
+BoxGlow.Transparency = 0.5
 
 local LoadingTitle = Instance.new("TextLabel", LoadingBox)
 LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
 LoadingTitle.Position = UDim2.new(0, 0, 0, 28)
 LoadingTitle.BackgroundTransparency = 1
 LoadingTitle.Font = Enum.Font.GothamBold
-LoadingTitle.Text = "VORTEX ENGINE // ZERO-LAG"
+LoadingTitle.Text = "VORTEX ENGINE // PURE WHITE"
 LoadingTitle.TextColor3 = AccentColor
 LoadingTitle.TextSize = 14
 
@@ -110,12 +103,12 @@ LoadingSub.Size = UDim2.new(1, 0, 0, 20)
 LoadingSub.Position = UDim2.new(0, 0, 0, 58)
 LoadingSub.BackgroundTransparency = 1
 LoadingSub.Font = Enum.Font.Code
-LoadingSub.Text = "INITIALIZING ASYNC CACHE & ENGINE..."
+LoadingSub.Text = "INITIALIZING SECURE ENVIRONMENT..."
 LoadingSub.TextColor3 = TextMuted
 LoadingSub.TextSize = 10
 
 local BarBg = Instance.new("Frame", LoadingBox)
-BarBg.Size = UDim2.new(0, 380, 0, 6)
+BarBg.Size = UDim2.new(0, 380, 0, 4)
 BarBg.Position = UDim2.new(0.5, -190, 0.78, 0)
 BarBg.BackgroundColor3 = CardDark
 BarBg.BorderSizePixel = 0
@@ -127,11 +120,11 @@ BarFill.BackgroundColor3 = AccentColor
 BarFill.BorderSizePixel = 0
 Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
-TweenService:Create(BarFill, TweenInfo.new(1.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-task.wait(1.5)
+TweenService:Create(BarFill, TweenInfo.new(1.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+task.wait(1.3)
 LoadingFrame:Destroy()
 
--- PREMIUM KEY AUTHENTICATION WINDOW
+-- KEY AUTHENTICATION WINDOW
 local KeyAuthGranted = false
 local KeyGui = Instance.new("Frame", ScreenGui)
 KeyGui.Size = UDim2.new(0, 420, 0, 250)
@@ -139,11 +132,12 @@ KeyGui.Position = UDim2.new(0.5, -210, 0.5, -125)
 KeyGui.BackgroundColor3 = SidebarDark
 KeyGui.BorderSizePixel = 0
 KeyGui.ZIndex = 500
-Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 14)
+Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 10)
 
 local KeyGlow = Instance.new("UIStroke", KeyGui)
 KeyGlow.Color = AccentColor
-KeyGlow.Thickness = 2
+KeyGlow.Thickness = 1.2
+KeyGlow.Transparency = 0.5
 
 local KeyTitle = Instance.new("TextLabel", KeyGui)
 KeyTitle.Size = UDim2.new(1, 0, 0, 35)
@@ -164,7 +158,7 @@ KeySub.TextColor3 = TextMuted
 KeySub.TextSize = 10
 
 local KeyBox = Instance.new("TextBox", KeyGui)
-KeyBox.Size = UDim2.new(0, 360, 0, 44)
+KeyBox.Size = UDim2.new(0, 360, 0, 40)
 KeyBox.Position = UDim2.new(0.5, -180, 0, 90)
 KeyBox.BackgroundColor3 = CardDark
 KeyBox.BorderSizePixel = 0
@@ -173,22 +167,22 @@ KeyBox.Text = ""
 KeyBox.TextColor3 = TextMain
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextSize = 12
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
 
 local SubmitBtn = Instance.new("TextButton", KeyGui)
-SubmitBtn.Size = UDim2.new(0, 360, 0, 44)
-SubmitBtn.Position = UDim2.new(0.5, -180, 0, 146)
+SubmitBtn.Size = UDim2.new(0, 360, 0, 40)
+SubmitBtn.Position = UDim2.new(0.5, -180, 0, 142)
 SubmitBtn.BackgroundColor3 = AccentColor
 SubmitBtn.BorderSizePixel = 0
 SubmitBtn.Font = Enum.Font.GothamBold
 SubmitBtn.Text = "VERIFY & LAUNCH"
-SubmitBtn.TextColor3 = TextMain
+SubmitBtn.TextColor3 = Color3.fromRGB(15, 15, 18)
 SubmitBtn.TextSize = 12
-Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
 
 local KeyStatus = Instance.new("TextLabel", KeyGui)
 KeyStatus.Size = UDim2.new(1, 0, 0, 20)
-KeyStatus.Position = UDim2.new(0, 0, 0, 202)
+KeyStatus.Position = UDim2.new(0, 0, 0, 195)
 KeyStatus.BackgroundTransparency = 1
 KeyStatus.Font = Enum.Font.Gotham
 KeyStatus.Text = "Status: Waiting for license input..."
@@ -219,7 +213,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
         KeyAuthGranted = true
         KeyStatus.TextColor3 = Color3.fromRGB(0, 255, 120)
         KeyStatus.Text = "AUTHENTICATION SUCCESSFUL!"
-        task.wait(0.5)
+        task.wait(0.4)
         KeyGui:Destroy()
     else
         KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
@@ -257,37 +251,30 @@ local Config = {
     VisualSpin = false,
     SpinSpeed = 50,
     Crosshair = false,
-    KillerESPColor = Color3.fromRGB(255, 50, 50),
-    PalletESPColor = Color3.fromRGB(255, 180, 0)
+    KillerESPColor = Color3.fromRGB(255, 255, 255),
+    PalletESPColor = Color3.fromRGB(200, 200, 200)
 }
 
--- Кэш объектов для нулевой нагрузки на процессор
-local Cache = {
-    Generators = {},
-    Pallets = {},
-    ClosestKiller = nil,
-    KillersList = {},
-    PlayersList = {}
-}
+local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 
--- REDESIGNED ULTRA WATERMARK
+-- ОБЫЧНАЯ ЧЕТКАЯ ВАТЕРМАРКА (Без мыла)
 local Watermark = Instance.new("TextButton", ScreenGui)
 Watermark.Name = "Watermark"
-Watermark.Size = UDim2.new(0, 180, 0, 32)
+Watermark.Size = UDim2.new(0, 160, 0, 26)
 Watermark.Position = UDim2.new(0.02, 0, 0.02, 0)
 Watermark.BackgroundColor3 = SidebarDark
 Watermark.BorderSizePixel = 0
 Watermark.Font = Enum.Font.GothamBold
-Watermark.Text = "  vortex.cc  //  60 FPS"
+Watermark.Text = "  vortex.cc  |  60 FPS"
 Watermark.TextColor3 = AccentColor
 Watermark.TextSize = 11
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
-Instance.new("UICorner", Watermark).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", Watermark).CornerRadius = UDim.new(0, 4)
 
 local WmStroke = Instance.new("UIStroke", Watermark)
 WmStroke.Color = AccentColor
-WmStroke.Thickness = 1.2
-WmStroke.Transparency = 0.4
+WmStroke.Thickness = 1
+WmStroke.Transparency = 0.5
 
 local dragging, dragStart, startPos
 Watermark.InputBegan:Connect(function(input)
@@ -309,7 +296,7 @@ local fpsCount, lastUpdate = 0, tick()
 RunService.RenderStepped:Connect(function()
     fpsCount = fpsCount + 1
     if tick() - lastUpdate >= 1 then
-        Watermark.Text = "  vortex.cc  //  " .. tostring(fpsCount) .. " FPS"
+        Watermark.Text = "  vortex.cc  |  " .. tostring(fpsCount) .. " FPS"
         fpsCount = 0 lastUpdate = tick()
     end
 end)
@@ -323,9 +310,9 @@ MainMenu.BackgroundColor3 = BgDark
 MainMenu.BorderSizePixel = 0
 MainMenu.Visible = false
 
-Instance.new("UICorner", MainMenu).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", MainMenu).CornerRadius = UDim.new(0, 8)
 local MenuStroke = Instance.new("UIStroke", MainMenu)
-MenuStroke.Color = Color3.fromRGB(40, 44, 55) MenuStroke.Thickness = 1.2
+MenuStroke.Color = Color3.fromRGB(50, 50, 60) MenuStroke.Thickness = 1
 
 Watermark.MouseButton1Click:Connect(function() MainMenu.Visible = not MainMenu.Visible end)
 
@@ -333,7 +320,7 @@ local Sidebar = Instance.new("Frame", MainMenu)
 Sidebar.Size = UDim2.new(0, 150, 1, 0)
 Sidebar.BackgroundColor3 = SidebarDark
 Sidebar.BorderSizePixel = 0
-Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
 
 local Logo = Instance.new("TextLabel", Sidebar)
 Logo.Size = UDim2.new(1, -20, 0, 40)
@@ -352,14 +339,14 @@ TabContainer.BackgroundTransparency = 1
 
 local TabListLayout = Instance.new("UIListLayout", TabContainer)
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabListLayout.Padding = UDim.new(0, 5)
+TabListLayout.Padding = UDim.new(0, 4)
 
 local UserProfile = Instance.new("Frame", Sidebar)
 UserProfile.Size = UDim2.new(1, -16, 0, 45)
 UserProfile.Position = UDim2.new(0, 8, 1, -55)
 UserProfile.BackgroundColor3 = CardDark
 UserProfile.BorderSizePixel = 0
-Instance.new("UICorner", UserProfile).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", UserProfile).CornerRadius = UDim.new(0, 6)
 
 local UserAvatar = Instance.new("ImageLabel", UserProfile)
 UserAvatar.Size = UDim2.new(0, 30, 0, 30)
@@ -418,24 +405,12 @@ ContentArea.Size = UDim2.new(1, -165, 1, -60)
 ContentArea.Position = UDim2.new(0, 155, 0, 55)
 ContentArea.BackgroundTransparency = 1
 
-local ThemeObjects = {}
-local function RegisterThemeObject(obj, prop)
-    table.insert(ThemeObjects, {Object = obj, Property = prop}) obj[prop] = AccentColor
-end
-
-local ActiveTabButton = nil
-local function ApplyTheme(newColor)
-    AccentColor = newColor Config.RingColor = newColor BoxGlow.Color = newColor LoadingTitle.TextColor3 = newColor BarFill.BackgroundColor3 = newColor KeyGlow.Color = newColor KeyTitle.TextColor3 = newColor SubmitBtn.BackgroundColor3 = newColor WmStroke.Color = newColor Watermark.TextColor3 = newColor Logo.TextColor3 = newColor
-    if ActiveTabButton then ActiveTabButton.BackgroundColor3 = newColor end
-    for _, item in ipairs(ThemeObjects) do
-        if item.Object and item.Object.Parent then item.Object[item.Property] = newColor end
-    end
-end
-
 local Tabs, Pages = {}, {}
+local ActiveTabButton = nil
+
 local function CreateTab(name, layoutOrder)
     local TabBtn = Instance.new("TextButton", TabContainer)
-    TabBtn.Size = UDim2.new(1, -16, 0, 34)
+    TabBtn.Size = UDim2.new(1, -16, 0, 32)
     TabBtn.Position = UDim2.new(0, 8, 0, 0)
     TabBtn.BackgroundColor3 = SidebarDark
     TabBtn.BorderSizePixel = 0
@@ -445,7 +420,7 @@ local function CreateTab(name, layoutOrder)
     TabBtn.TextSize = 11
     TabBtn.TextXAlignment = Enum.TextXAlignment.Left
     TabBtn.LayoutOrder = layoutOrder
-    Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
     local Page = Instance.new("Frame", ContentArea)
     Page.Size = UDim2.new(1, 0, 1, 0)
@@ -465,7 +440,7 @@ local function CreateTab(name, layoutOrder)
     TabBtn.MouseButton1Click:Connect(function()
         for _, p in pairs(Pages) do p.Visible = false end
         for _, b in pairs(Tabs) do b.TextColor3 = TextMuted b.BackgroundColor3 = SidebarDark end
-        TabBtn.TextColor3 = TextMain TabBtn.BackgroundColor3 = AccentColor ActiveTabButton = TabBtn Page.Visible = true
+        TabBtn.TextColor3 = Color3.fromRGB(15, 15, 18) TabBtn.BackgroundColor3 = AccentColor ActiveTabButton = TabBtn Page.Visible = true
     end)
 
     table.insert(Tabs, TabBtn) table.insert(Pages, Page)
@@ -475,7 +450,7 @@ end
 local function CreateCard(parent, title)
     local Card = Instance.new("Frame", parent)
     Card.Size = UDim2.new(1, -5, 0, 30) Card.BackgroundColor3 = CardDark Card.BorderSizePixel = 0
-    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
     local CardList = Instance.new("UIListLayout", Card) CardList.SortOrder = Enum.SortOrder.LayoutOrder CardList.Padding = UDim.new(0, 6)
     local Header = Instance.new("TextLabel", Card)
     Header.Size = UDim2.new(1, -20, 0, 25) Header.Position = UDim2.new(0, 10, 0, 0) Header.BackgroundTransparency = 1
@@ -489,40 +464,37 @@ local function CreateCard(parent, title)
 end
 
 local function CreateToggle(card, text, default, callback)
-    local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 24) Toggle.BackgroundTransparency = 1
+    local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     local Label = Instance.new("TextLabel", Toggle)
     Label.Size = UDim2.new(0.7, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
     Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
     local Switch = Instance.new("TextButton", Toggle)
-    Switch.Size = UDim2.new(0, 16, 0, 16) Switch.Position = UDim2.new(1, -16, 0.5, -8)
-    Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 50, 60) Switch.BorderSizePixel = 0 Switch.Text = ""
-    Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 4)
-    if default then RegisterThemeObject(Switch, "BackgroundColor3") end
+    Switch.Size = UDim2.new(0, 14, 0, 14) Switch.Position = UDim2.new(1, -14, 0.5, -7)
+    Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0 Switch.Text = ""
+    Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 3)
+
     local state = default
     Switch.MouseButton1Click:Connect(function()
         state = not state
-        Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 50, 60)
-        if state then RegisterThemeObject(Switch, "BackgroundColor3") end
+        Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 45, 55)
         callback(state)
     end)
 end
 
 local function CreateSlider(card, text, min, max, default, callback)
-    local Slider = Instance.new("Frame", card) Slider.Size = UDim2.new(1, 0, 0, 32) Slider.BackgroundTransparency = 1
+    local Slider = Instance.new("Frame", card) Slider.Size = UDim2.new(1, 0, 0, 30) Slider.BackgroundTransparency = 1
     local Label = Instance.new("TextLabel", Slider)
     Label.Size = UDim2.new(0.6, 0, 0, 14) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
     Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
     local ValLabel = Instance.new("TextLabel", Slider)
     ValLabel.Size = UDim2.new(0.4, 0, 0, 14) ValLabel.Position = UDim2.new(0.6, 0, 0, 0) ValLabel.BackgroundTransparency = 1
     ValLabel.Font = Enum.Font.GothamBold ValLabel.Text = tostring(default) ValLabel.TextColor3 = AccentColor ValLabel.TextSize = 10 ValLabel.TextXAlignment = Enum.TextXAlignment.Right
-    RegisterThemeObject(ValLabel, "TextColor3")
     local SliderBg = Instance.new("Frame", Slider)
-    SliderBg.Size = UDim2.new(1, 0, 0, 5) SliderBg.Position = UDim2.new(0, 0, 0, 22) SliderBg.BackgroundColor3 = Color3.fromRGB(45, 50, 60) SliderBg.BorderSizePixel = 0
+    SliderBg.Size = UDim2.new(1, 0, 0, 4) SliderBg.Position = UDim2.new(0, 0, 0, 20) SliderBg.BackgroundColor3 = Color3.fromRGB(45, 45, 55) SliderBg.BorderSizePixel = 0
     Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
     local SliderFill = Instance.new("Frame", SliderBg)
     SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0) SliderFill.BackgroundColor3 = AccentColor SliderFill.BorderSizePixel = 0
     Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
-    RegisterThemeObject(SliderFill, "BackgroundColor3")
     local draggingSlider = false
     SliderBg.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true end
@@ -539,17 +511,8 @@ local function CreateSlider(card, text, min, max, default, callback)
     end)
 end
 
-local function CreateButton(card, text, callback)
-    local Btn = Instance.new("TextButton", card)
-    Btn.Size = UDim2.new(1, 0, 0, 30) Btn.BackgroundColor3 = Color3.fromRGB(35, 40, 50) Btn.BorderSizePixel = 0
-    Btn.Font = Enum.Font.GothamBold Btn.Text = text Btn.TextColor3 = TextMain Btn.TextSize = 10
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-    Btn.MouseButton1Click:Connect(callback)
-end
-
 local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
 local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
-local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 3)
 
 local SurvivorCard = CreateCard(MainL, "Survivor Side")
 CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
@@ -584,17 +547,7 @@ CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin 
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
-local ThemePresetCardL = CreateCard(ThemesL, "Presets Side A")
-CreateButton(ThemePresetCardL, "Theme: Purple (Default)", function() ApplyTheme(PresetThemes.Purple) end)
-CreateButton(ThemePresetCardL, "Theme: Cyan Neon", function() ApplyTheme(PresetThemes.Cyan) end)
-CreateButton(ThemePresetCardL, "Theme: Emerald Green", function() ApplyTheme(PresetThemes.Green) end)
-
-local ThemePresetCardR = CreateCard(ThemesR, "Presets Side B")
-CreateButton(ThemePresetCardR, "Theme: Crimson Red", function() ApplyTheme(PresetThemes.Red) end)
-CreateButton(ThemePresetCardR, "Theme: Sunset Orange", function() ApplyTheme(PresetThemes.Orange) end)
-CreateButton(ThemePresetCardR, "Theme: Hot Pink", function() ApplyTheme(PresetThemes.Pink) end)
-
-MainTabBtn.TextColor3 = TextMain MainTabBtn.BackgroundColor3 = AccentColor ActiveTabButton = MainTabBtn Pages[1].Visible = true
+MainTabBtn.TextColor3 = Color3.fromRGB(15, 15, 18) MainTabBtn.BackgroundColor3 = AccentColor ActiveTabButton = MainTabBtn Pages[1].Visible = true
 
 local RingFolder = Instance.new("Folder", Workspace) RingFolder.Name = "VortexTriangleRing"
 local triangleParts = {}
@@ -655,7 +608,6 @@ local function ListenToKillerAttacks(killerChar)
     end)
 end
 
--- ЛЕГКОВЕСНЫЕ И ОПТИМИЗИРОВАННЫЕ ТРАССЕРЫ (Один пул фреймов без утечек памяти)
 local TracersFolder = Instance.new("Folder", ScreenGui) 
 TracersFolder.Name = "VortexTracers"
 local tracerLines = {}
@@ -689,10 +641,9 @@ end
 
 local CrosshairGui = Instance.new("Frame", ScreenGui)
 CrosshairGui.Name = "VortexCrosshair" CrosshairGui.Size = UDim2.new(0, 10, 0, 10) CrosshairGui.Position = UDim2.new(0.5, -5, 0.5, -5) CrosshairGui.BackgroundTransparency = 1 CrosshairGui.Visible = false
-local c1 = Instance.new("Frame", CrosshairGui) c1.Size = UDim2.new(0, 4, 0, 2) c1.Position = UDim2.new(0, 3, 0, 4) c1.BackgroundColor3 = AccentColor c1.BorderSizePixel = 0 RegisterThemeObject(c1, "BackgroundColor3")
-local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c2.Position = UDim2.new(0, 4, 0, 3) c2.BackgroundColor3 = AccentColor c2.BorderSizePixel = 0 RegisterThemeObject(c2, "BackgroundColor3")
+local c1 = Instance.new("Frame", CrosshairGui) c1.Size = UDim2.new(0, 4, 0, 2) c1.Position = UDim2.new(0, 3, 0, 4) c1.BackgroundColor3 = AccentColor c1.BorderSizePixel = 0
+local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c2.Position = UDim2.new(0, 4, 0, 3) c2.BackgroundColor3 = AccentColor c2.BorderSizePixel = 0
 
--- АСИНХРОННЫЙ КЭШ (РАБОТАЕТ В ФОНЕ, НОЛЬ ЛАГОВ)
 task.spawn(function()
     while task.wait(3) do
         local tempGens, tempPallets, tempKillers, tempPlayers = {}, {}, {}, {}
@@ -797,7 +748,6 @@ RunService.RenderStepped:Connect(function(dt)
         Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Cache.ClosestKiller.Position), 0.35)
     end
 
-    -- ОПТИМИЗИРОВАННЫЙ РЕНДЕР ТРАССЕРОВ (Без лагов и создания новых объектов)
     local tracerIndex = 1
     if Config.TracersKiller then
         for _, char in ipairs(Cache.KillersList) do
@@ -811,7 +761,6 @@ RunService.RenderStepped:Connect(function(dt)
             if root then DrawWhiteTracer(root.Position, tracerIndex) tracerIndex = tracerIndex + 1 end
         end
     end
-    -- Скрываем неиспользуемые линии трассеров
     for i = tracerIndex, #tracerLines do
         if tracerLines[i] then tracerLines[i].Visible = false end
     end
