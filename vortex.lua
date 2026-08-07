@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Customizable ESP Edition
+    Vortex Hub // Region of Violence (VD) - Ultimate Complete Edition
     Author: TWKS
 ]]--
 
@@ -231,7 +231,7 @@ end)
 
 repeat task.wait(0.1) until KeyAuthGranted == true
 
--- Config с поддержкой кастомных цветов ESP
+-- Config
 local Config = {
     AutoSkillCheck = true,
     NoClip = false,
@@ -241,7 +241,6 @@ local Config = {
     FastRepair = false,
     KillerAimbot = false,
     AutoStunDagger = false,
-    FakeDagger = false,
     Flowstate = false,
     InfiniteFlashlight = false,
 
@@ -255,7 +254,7 @@ local Config = {
     KillerESP = false,
     PalletESP = false,
     GeneratorESP = false,
-    WindowESP = false, -- Новое: подсветка окон/дверей
+    WindowESP = false,
     TracersPlayers = false,
     TracersKiller = false,
     TriangleRingEnabled = false,
@@ -265,7 +264,7 @@ local Config = {
     SpinSpeed = 50,
     Crosshair = false,
     
-    -- Настраиваемые цвета (по умолчанию неяркий красный для киллера, остальные под тему/палитру)
+    -- Кастомные цвета ESP
     KillerESPColor = Color3.fromRGB(180, 60, 60),
     PlayerESPColor = Color3.fromRGB(255, 255, 255),
     GeneratorESPColor = Color3.fromRGB(255, 255, 255),
@@ -275,28 +274,6 @@ local Config = {
 
 local Cache = { Generators = {}, Pallets = {}, Windows = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 local ActiveBindsUI = {}
-
-local function TriggerFakeDagger()
-    if not LocalPlayer.Character then return end
-    local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-    if not tool then
-        local backpack = LocalPlayer:FindFirstChild("Backpack")
-        if backpack then
-            for _, t in pairs(backpack:GetChildren()) do
-                if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then
-                    tool = t
-                    break
-                end
-            end
-        end
-    end
-    if tool then
-        if tool.Parent ~= LocalPlayer.Character then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):EquipTool(tool)
-        end
-        pcall(function() tool:Activate() end)
-    end
-end
 
 local function ProcessFlowstate()
     if not Config.Flowstate then return end
@@ -715,7 +692,6 @@ local function CreateToggle(card, text, default, callback)
     end)
 end
 
--- Функция выбора цвета для ESP
 local function CreateColorPicker(card, text, currentColor, callback)
     local CpFrame = Instance.new("Frame", card) CpFrame.Size = UDim2.new(1, 0, 0, 22) CpFrame.BackgroundTransparency = 1
     
@@ -728,7 +704,6 @@ local function CreateColorPicker(card, text, currentColor, callback)
     ColorBtn.BackgroundColor3 = currentColor ColorBtn.BorderSizePixel = 0 ColorBtn.Text = ""
     Instance.new("UICorner", ColorBtn).CornerRadius = UDim.new(0, 3)
 
-    -- Маленькое меню выбора цвета при клике
     local PickerPopup = Instance.new("Frame", ScreenGui)
     PickerPopup.Size = UDim2.new(0, 130, 0, 95)
     PickerPopup.BackgroundColor3 = SidebarDark
@@ -826,7 +801,6 @@ CreateToggle(SurvivorCard, "Fast Repair / Interactions", false, function(v) Conf
 CreateToggle(SurvivorCard, "Flowstate (Fast Windows)", false, function(v) Config.Flowstate = v end)
 CreateToggle(SurvivorCard, "Infinite Flashlight", false, function(v) Config.InfiniteFlashlight = v end)
 CreateToggle(SurvivorCard, "Auto Dagger Counter Stun", false, function(v) Config.AutoStunDagger = v end)
-CreateToggle(SurvivorCard, "Fake Dagger", false, function(v) Config.FakeDagger = v end)
 
 local KillerCard = CreateCard(MainR, "Killer Side")
 CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
@@ -905,34 +879,25 @@ local function updateTriangleRing(enabled, count, radius, color)
     end
 end
 
-local function HasDaggerEquipped()
-    if not LocalPlayer.Character then return nil end
-    local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-    if tool and (string.find(string.lower(tool.Name), "dagger") or string.find(string.lower(tool.Name), "knife")) then return tool end
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if backpack then
-        for _, t in pairs(backpack:GetChildren()) do
-            if t:IsA("Tool") and (string.find(string.lower(t.Name), "dagger") or string.find(string.lower(t.Name), "knife")) then return t end
-        end
-    end
-    return nil
-end
-
+-- РАБОЧИЙ AUTO DAGGER (клик правой кнопкой мыши по таймингу удара киллера вплотную)
 local function ListenToKillerAttacks(killerChar)
     local hum = killerChar:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
+    if not hum or hum:GetAttribute("VortexHooked") then return end
+    hum:SetAttribute("VortexHooked", true)
+
     hum.AnimationPlayed:Connect(function(track)
-        if Config.AutoStunDagger and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-            local kPos = killerChar.HumanoidRootPart.Position
-            if (myPos - kPos).Magnitude <= 12 then
-                local dagger = HasDaggerEquipped()
-                if dagger then
-                    if dagger.Parent ~= LocalPlayer.Character then
-                        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):EquipTool(dagger)
-                    end
-                    task.wait(0.05)
-                    dagger:Activate()
+        if not Config.AutoStunDagger then return end
+        
+        local animName = string.lower(track.Animation.AnimationId)
+        if string.find(animName, "attack") or string.find(animName, "strike") or string.find(animName, "hit") or string.find(animName, "swing") then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+                local kPos = killerChar.HumanoidRootPart.Position
+                
+                if (myPos - kPos).Magnitude <= 12 then
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0)
+                    task.wait(0.02)
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0)
                 end
             end
         end
@@ -1045,11 +1010,6 @@ RunService.Heartbeat:Connect(function()
     ProcessFlowstate()
     ProcessInfiniteFlashlight()
 
-    if Config.FakeDagger then
-        TriggerFakeDagger()
-        Config.FakeDagger = false
-    end
-
     if Config.SpeedHack and LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = Config.SpeedValue end
@@ -1108,7 +1068,6 @@ RunService.RenderStepped:Connect(function(dt)
     if throttleTimer >= 0.15 then
         throttleTimer = 0
 
-        -- Киллер: менее яркая приглушенная обводка (FillTransparency = 0.6)
         for _, char in ipairs(Cache.KillersList) do
             local hl = char:FindFirstChild("VDHighlight")
             if Config.KillerESP then
