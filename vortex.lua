@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with Dedicated Binds Tab
+    Vortex Hub // Region of Violence (VD) - Complete Edition with Fixed Keybinds Display
     Author: TWKS
 ]]--
 
@@ -526,15 +526,16 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
 end)
 
-local function UpdateKeybindsUI(name, keyName, state)
+-- Обновление окошка биндов: отображает забиндженные функции приглушенным цветом (независимо от того, включены они или нет)
+local function UpdateKeybindsUI(name, keyName, hasKey)
     local label = ActiveBindsUI[name]
-    if state then
+    if hasKey and keyName ~= "" then
         if not label then
             label = Instance.new("TextLabel", KbContainer)
             label.Size = UDim2.new(1, 0, 0, 18)
             label.BackgroundTransparency = 1
             label.Font = Enum.Font.Gotham
-            label.TextColor3 = TextMain
+            label.TextColor3 = TextMuted -- Сделали приглушенным неярким цветом
             label.TextSize = 10
             label.TextXAlignment = Enum.TextXAlignment.Left
             ActiveBindsUI[name] = label
@@ -637,7 +638,7 @@ local function CreateCard(parent, title)
     return Card
 end
 
--- СИСТЕМА TOGGLE С НАЗНАЧЕНИЕМ БИНДА ЧЕРЕЗ КЛИК КОЛЕСИКОМ МЫШИ (ТОЛЬКО НАЖАТИЕ / TOGGLE)
+-- СИСТЕМА TOGGLE С БИНДОМ ЧЕРЕЗ КЛИК КОЛЕСИКОМ МЫШИ (MouseButton3)
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
     
@@ -671,9 +672,6 @@ local function CreateToggle(card, text, default, callback)
         Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 45, 55)
         if state then RegisterThemeObject(Switch, "BackgroundColor3") end
         callback(state)
-        if assignedKey then
-            UpdateKeybindsUI(text, assignedKey.Name, state)
-        end
     end
 
     ClickZone.InputBegan:Connect(function(input)
@@ -696,7 +694,7 @@ local function CreateToggle(card, text, default, callback)
                     else
                         assignedKey = key
                         BindLabel.Text = "[" .. key.Name .. "]"
-                        UpdateKeybindsUI(text, key.Name, state)
+                        UpdateKeybindsUI(text, key.Name, true)
                     end
                     isBinding = false
                     connection:Disconnect()
@@ -705,7 +703,6 @@ local function CreateToggle(card, text, default, callback)
         end
     end)
 
-    -- Срабатывание бинда только на нажатие (переключение)
     UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe or not assignedKey or isBinding then return end
         if input.KeyCode == assignedKey then
@@ -756,7 +753,7 @@ end
 
 local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
 local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
-local BindsL, BindsR, BindsTabBtn = CreateTab("Binds", 3) -- НОВАЯ ОТДЕЛЬНАЯ КАТЕГОРИЯ ДЛЯ БИНДОВ
+local BindsL, BindsR, BindsTabBtn = CreateTab("Binds", 3)
 local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 4)
 
 local SurvivorCard = CreateCard(MainL, "Survivor Side")
@@ -789,13 +786,12 @@ CreateToggle(ESPCard, "White Tracers: Players", false, function(v) Config.Tracer
 CreateToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
 CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
 CreateToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
-CreateToggle(ESPCCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
+CreateToggle(ESPCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
 CreateSlider(ESPCard, "Ring Size", 5, 40, 15, function(v) Config.RingSize = v end)
 CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
--- НАСТРОЙКИ В НОВОЙ ВКЛАДКЕ "Binds"
 local BindMenuCard = CreateCard(BindsL, "Keybinds UI Display")
 CreateToggle(BindMenuCard, "Show Keybinds List", false, function(v)
     KeybindsDisplay.Visible = v
@@ -1075,7 +1071,7 @@ RunService.RenderStepped:Connect(function(dt)
 
         if Config.PalletESP then
             for _, pal in ipairs(Cache.Pallets) do
-                if not pal:FindFirstChild("PalletHL") then
+                if not pal:FindFirstChild("PalletHL") then,
                     local hl = Instance.new("Highlight", pal) hl.Name = "PalletHL" hl.Adornee = pal
                     hl.FillColor = Config.PalletESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
                 end
