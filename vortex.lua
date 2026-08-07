@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with Keybinds
+    Vortex Hub // Region of Violence (VD) - Complete Edition with Mode Select & Fixed Tracers
     Author: TWKS
 ]]--
 
@@ -268,7 +268,7 @@ local Config = {
 }
 
 local Cache = { Generators = {}, Pallets = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
-local FeatureBinds = {} -- Хранит назначенные клавиши для функций
+local ActiveBindsUI = {}
 
 -- FAKE DAGGER ФУНКЦИЯ
 local function TriggerFakeDagger()
@@ -482,6 +482,75 @@ ContentArea.Size = UDim2.new(1, -165, 1, -60)
 ContentArea.Position = UDim2.new(0, 155, 0, 55)
 ContentArea.BackgroundTransparency = 1
 
+-- ОТОБРАЖАТЕЛЬ БИНДОВ НА ЭКРАНЕ
+local KeybindsDisplay = Instance.new("Frame", ScreenGui)
+KeybindsDisplay.Name = "VortexKeybindsList"
+KeybindsDisplay.Size = UDim2.new(0, 160, 0, 150)
+KeybindsDisplay.Position = UDim2.new(0.02, 0, 0.25, 0)
+KeybindsDisplay.BackgroundColor3 = SidebarDark
+KeybindsDisplay.BorderSizePixel = 0
+KeybindsDisplay.Visible = false
+Instance.new("UICorner", KeybindsDisplay).CornerRadius = UDim.new(0, 6)
+
+local KbStroke = Instance.new("UIStroke", KeybindsDisplay)
+KbStroke.Color = AccentColor
+KbStroke.Thickness = 1
+KbStroke.Transparency = 0.5
+
+local KbHeader = Instance.new("TextLabel", KeybindsDisplay)
+KbHeader.Size = UDim2.new(1, 0, 0, 25)
+KbHeader.BackgroundTransparency = 1
+KbHeader.Font = Enum.Font.GothamBold
+KbHeader.Text = "  Keybinds"
+KbHeader.TextColor3 = AccentColor
+KbHeader.TextSize = 11
+KbHeader.TextXAlignment = Enum.TextXAlignment.Left
+
+local KbContainer = Instance.new("Frame", KeybindsDisplay)
+KbContainer.Size = UDim2.new(1, 0, 1, -25)
+KbContainer.Position = UDim2.new(0, 0, 0, 25)
+KbContainer.BackgroundTransparency = 1
+local KbLayout = Instance.new("UIListLayout", KbContainer)
+KbLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local draggingKb, dragStartKb, startPosKb
+KeybindsDisplay.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingKb = true dragStartKb = input.Position startPosKb = KeybindsDisplay.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if draggingKb and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStartKb
+        KeybindsDisplay.Position = UDim2.new(startPosKb.X.Scale, startPosKb.X.Offset + delta.X, startPosKb.Y.Scale, startPosKb.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
+end)
+
+local function UpdateKeybindsUI(name, keyName, state)
+    local label = ActiveBindsUI[name]
+    if state then
+        if not label then
+            label = Instance.new("TextLabel", KbContainer)
+            label.Size = UDim2.new(1, 0, 0, 18)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextColor3 = TextMain
+            label.TextSize = 10
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            ActiveBindsUI[name] = label
+        end
+        label.Text = "  [ " .. keyName .. " ] " .. name
+    else
+        if label then
+            label:Destroy()
+            ActiveBindsUI[name] = nil
+        end
+    end
+end
+
 local ThemeObjects = {}
 local function RegisterThemeObject(obj, prop)
     table.insert(ThemeObjects, {Object = obj, Property = prop}) obj[prop] = AccentColor
@@ -501,6 +570,8 @@ local function ApplyTheme(newColor)
     WmStroke.Color = newColor
     Watermark.TextColor3 = newColor
     Logo.TextColor3 = newColor
+    KbStroke.Color = newColor
+    KbHeader.TextColor3 = newColor
     if ActiveTabButton then
         ActiveTabButton.BackgroundColor3 = newColor
         ActiveTabButton.TextColor3 = (newColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or TextMain
@@ -570,81 +641,7 @@ local function CreateCard(parent, title)
 end
 
 -- ==========================================
--- СИСТЕМА БИНДОВ И ОТОБРАЖАТЕЛЬ НА ЭКРАНЕ
--- ==========================================
-local ActiveBindsUI = {}
-
-local KeybindsDisplay = Instance.new("Frame", ScreenGui)
-KeybindsDisplay.Name = "VortexKeybindsList"
-KeybindsDisplay.Size = UDim2.new(0, 160, 0, 150)
-KeybindsDisplay.Position = UDim2.new(0.02, 0, 0.25, 0)
-KeybindsDisplay.BackgroundColor3 = SidebarDark
-KeybindsDisplay.BorderSizePixel = 0
-KeybindsDisplay.Visible = false -- Включается в визуалах
-Instance.new("UICorner", KeybindsDisplay).CornerRadius = UDim.new(0, 6)
-
-local KbStroke = Instance.new("UIStroke", KeybindsDisplay)
-KbStroke.Color = AccentColor
-KbStroke.Thickness = 1
-KbStroke.Transparency = 0.5
-
-local KbHeader = Instance.new("TextLabel", KeybindsDisplay)
-KbHeader.Size = UDim2.new(1, 0, 0, 25)
-KbHeader.BackgroundTransparency = 1
-KbHeader.Font = Enum.Font.GothamBold
-KbHeader.Text = "  Keybinds"
-KbHeader.TextColor3 = AccentColor
-KbHeader.TextSize = 11
-KbHeader.TextXAlignment = Enum.TextXAlignment.Left
-
-local KbContainer = Instance.new("Frame", KeybindsDisplay)
-KbContainer.Size = UDim2.new(1, 0, 1, -25)
-KbContainer.Position = UDim2.new(0, 0, 0, 25)
-KbContainer.BackgroundTransparency = 1
-local KbLayout = Instance.new("UIListLayout", KbContainer)
-KbLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
--- Перетаскивание списка биндов мышкой
-local draggingKb, dragStartKb, startPosKb
-KeybindsDisplay.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        draggingKb = true dragStartKb = input.Position startPosKb = KeybindsDisplay.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if draggingKb and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStartKb
-        KeybindsDisplay.Position = UDim2.new(startPosKb.X.Scale, startPos.X.Offset + delta.X, startPosKb.Y.Scale, startPosKb.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
-end)
-
-local function UpdateKeybindsUI(name, keyName, state)
-    local label = ActiveBindsUI[name]
-    if state then
-        if not label then
-            label = Instance.new("TextLabel", KbContainer)
-            label.Size = UDim2.new(1, 0, 0, 18)
-            label.BackgroundTransparency = 1
-            label.Font = Enum.Font.Gotham
-            label.TextColor3 = TextMain
-            label.TextSize = 10
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            ActiveBindsUI[name] = label
-        end
-        label.Text = "  [ " .. keyName .. " ] " .. name
-    else
-        if label then
-            label:Destroy()
-            ActiveBindsUI[name] = nil
-        end
-    end
-end
-
--- ==========================================
--- ИЗМЕНЕННЫЙ CREATE TOGGLE С КОЛЕСИКОМ МЫШИ (MouseButton3)
+-- ИЗМЕНЕННЫЙ CREATE TOGGLE (БИНД С ВЫБОРОМ РЕЖИМА: Toggle / Hold)
 -- ==========================================
 local function CreateToggle(card, text, default, callback)
     local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
@@ -653,12 +650,19 @@ local function CreateToggle(card, text, default, callback)
     ClickZone.Size = UDim2.new(1, 0, 1, 0) ClickZone.BackgroundTransparency = 1 ClickZone.Text = "" ClickZone.ZIndex = 2
 
     local Label = Instance.new("TextLabel", Toggle)
-    Label.Size = UDim2.new(0.6, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
+    Label.Size = UDim2.new(0.5, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
     Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Полупрозрачная буква бинда справа от функции
+    -- Кнопка выбора режима работы бинда (Toggle / Hold) справа от названия
+    local ModeBtn = Instance.new("TextButton", Toggle)
+    ModeBtn.Size = UDim2.new(0, 36, 0, 14) ModeBtn.Position = UDim2.new(1, -100, 0.5, -7)
+    ModeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45) ModeBtn.BorderSizePixel = 0
+    ModeBtn.Font = Enum.Font.GothamBold ModeBtn.Text = "Toggle" ModeBtn.TextColor3 = TextMuted ModeBtn.TextSize = 8
+    Instance.new("UICorner", ModeBtn).CornerRadius = UDim.new(0, 3)
+
+    -- Полупрозрачная буква бинда
     local BindLabel = Instance.new("TextLabel", Toggle)
-    BindLabel.Size = UDim2.new(0, 50, 1, 0) BindLabel.Position = UDim2.new(1, -70, 0, 0)
+    BindLabel.Size = UDim2.new(0, 40, 1, 0) BindLabel.Position = UDim2.new(1, -58, 0, 0)
     BindLabel.BackgroundTransparency = 1 BindLabel.Font = Enum.Font.Gotham
     BindLabel.Text = "[None]" BindLabel.TextColor3 = TextMuted BindLabel.TextTransparency = 0.5
     BindLabel.TextSize = 10 BindLabel.TextXAlignment = Enum.TextXAlignment.Right
@@ -673,8 +677,22 @@ local function CreateToggle(card, text, default, callback)
     local state = default
     local assignedKey = nil
     local isBinding = false
+    local bindMode = "Toggle" -- "Toggle" или "Hold"
+
+    ModeBtn.MouseButton1Click:Connect(function()
+        if bindMode == "Toggle" then
+            bindMode = "Hold"
+            ModeBtn.Text = "Hold"
+            ModeBtn.TextColor3 = AccentColor
+        else
+            bindMode = "Toggle"
+            ModeBtn.Text = "Toggle"
+            ModeBtn.TextColor3 = TextMuted
+        end
+    end)
 
     local function ApplyState(newState)
+        if state == newState then return end
         state = newState
         Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 45, 55)
         if state then RegisterThemeObject(Switch, "BackgroundColor3") end
@@ -690,7 +708,6 @@ local function CreateToggle(card, text, default, callback)
                 ApplyState(not state)
             end
         elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
-            -- Клик колесиком мыши для назначения бинда
             isBinding = true
             BindLabel.Text = "[...]"
             
@@ -714,11 +731,24 @@ local function CreateToggle(card, text, default, callback)
         end
     end)
 
-    -- Глобальный слушатель нажатия буквы для этой функции
+    -- Обработка нажатий и удержания клавиши
     UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then return end
-        if assignedKey and input.KeyCode == assignedKey and not isBinding then
-            ApplyState(not state)
+        if gpe or not assignedKey or isBinding then return end
+        if input.KeyCode == assignedKey then
+            if bindMode == "Toggle" then
+                ApplyState(not state)
+            elseif bindMode == "Hold" then
+                ApplyState(true)
+            end
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if not assignedKey or isBinding then return end
+        if input.KeyCode == assignedKey then
+            if bindMode == "Hold" then
+                ApplyState(false)
+            end
         end
     end)
 end
@@ -803,7 +833,6 @@ CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin 
 CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
 CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
 
--- Кнопка включения отображателя биндов в разделе Визуалы
 local BindMenuCard = CreateCard(VisualsR, "Keybinds UI")
 CreateToggle(BindMenuCard, "Show Keybinds List", false, function(v)
     KeybindsDisplay.Visible = v
@@ -880,6 +909,9 @@ local function ListenToKillerAttacks(killerChar)
     end)
 end
 
+-- ==========================================
+-- ИСПРАВЛЕННЫЕ И РОВНЫЕ ТРАЙСЕРА (ИСПРАВЛЕНА МАТЕМАТИКА ОРИЕНТАЦИИ И РАЗМЕРОВ)
+-- ==========================================
 local TracersFolder = Instance.new("Folder", ScreenGui) 
 TracersFolder.Name = "VortexTracers"
 local tracerLines = {}
@@ -898,11 +930,12 @@ local function DrawWhiteTracer(targetPos, index)
         end
         line.Visible = true
         
+        -- Начальная точка — центр нижней части экрана
         local startPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
         local endPos = Vector2.new(screenPos.X, screenPos.Y)
         local distance = (endPos - startPos).Magnitude
         
-        line.Size = UDim2.new(0, distance, 0, 1.5)
+        line.Size = UDim2.new(0, distance, 0, 1)
         line.Position = UDim2.new(0, startPos.X, 0, startPos.Y)
         line.Rotation = math.deg(math.atan2(endPos.Y - startPos.Y, endPos.X - startPos.X))
         line.AnchorPoint = Vector2.new(0, 0.5)
@@ -979,6 +1012,8 @@ local function ProcessSkillCheckFast()
         end
     end
 end
+
+RunService.Heartbeat:Context = function() end
 
 RunService.Heartbeat:Connect(function()
     ProcessSkillCheckFast()
@@ -1062,7 +1097,7 @@ RunService.RenderStepped:Connect(function(dt)
         for _, char in ipairs(Cache.PlayersList) do
             local hl = char:FindFirstChild("VDHighlight")
             if Config.PlayerESP then
-                if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
+                if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight`" end
                 hl.Adornee = char hl.FillColor = AccentColor hl.OutlineColor = AccentColor hl.OutlineTransparency = 1 hl.FillTransparency = 0.35
             else
                 if hl then hl:Destroy() end
@@ -1071,7 +1106,8 @@ RunService.RenderStepped:Connect(function(dt)
 
         if Config.GeneratorESP then
             for _, gen in ipairs(Cache.Generators) do
-                if not gen:FindFirstChild("GenHL") then
+                if not gen:FindFirstChild("GenHL")
+                then
                     local hl = Instance.new("Highlight", gen) hl.Name = "GenHL" hl.Adornee = gen
                     hl.FillColor = AccentColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
                 end
