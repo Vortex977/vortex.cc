@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Ultimate Fixed Edition
+    Vortex Hub // Region of Violence (VD) - Complete Edition with Auth & Portal
     Author: TWKS
 ]]--
 
@@ -10,10 +10,48 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local HttpService = game:GetService("HttpService")
+local AnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local HWID = "UNKNOWN-PC"
+pcall(function() HWID = AnalyticsService:GetClientId() end)
+
+local function GetNetworkTime()
+    local success, result = pcall(function()
+        local response = game:HttpGet("http://worldtimeapi.org/api/timezone/Etc/UTC")
+        local data = HttpService:JSONDecode(response)
+        return data.unixtime
+    end)
+    if success and result then return result else return os.time() end
+end
+
+local ValidKeys = {
+    ["VORTEX-1D-01A9"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-02B4"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-03C7"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-04D2"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-05E8"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-06F1"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-07G5"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-08H9"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-09J3"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-1D-10K6"] = { Duration = 86400, BoundHWID = nil },
+    ["VORTEX-30D-A101"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-B202"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-C303"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-D404"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-E505"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-F606"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-G707"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-H808"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-J909"] = { Duration = 2592000, BoundHWID = nil },
+    ["VORTEX-30D-K010"] = { Duration = 2592000, BoundHWID = nil },
+    ["admin2013"] = { Duration = 999999999, BoundHWID = nil }
+}
 
 local PresetThemes = {
     White = Color3.fromRGB(255, 255, 255),
@@ -32,7 +70,6 @@ local CardDark = Color3.fromRGB(28, 28, 34)
 local TextMain = Color3.fromRGB(255, 255, 255)
 local TextMuted = Color3.fromRGB(160, 160, 170)
 
--- Безопасное создание интерфейса в PlayerGui
 local oldGui = PlayerGui:FindFirstChild("VortexHubComplete")
 if oldGui then oldGui:Destroy() end
 
@@ -41,6 +78,159 @@ ScreenGui.Name = "VortexHubComplete"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = PlayerGui
+
+-- LOADING SCREEN
+local LoadingFrame = Instance.new("Frame", ScreenGui)
+LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
+LoadingFrame.BackgroundColor3 = BgDark
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 1000
+
+local LoadingBox = Instance.new("Frame", LoadingFrame)
+LoadingBox.Size = UDim2.new(0, 460, 0, 190)
+LoadingBox.Position = UDim2.new(0.5, -230, 0.5, -95)
+LoadingBox.BackgroundColor3 = SidebarDark
+LoadingBox.BorderSizePixel = 0
+Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 10)
+
+local BoxGlow = Instance.new("UIStroke", LoadingBox)
+BoxGlow.Color = AccentColor
+BoxGlow.Thickness = 1.2
+BoxGlow.Transparency = 0.5
+
+local LoadingTitle = Instance.new("TextLabel", LoadingBox)
+LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
+LoadingTitle.Position = UDim2.new(0, 0, 0, 28)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Font = Enum.Font.GothamBold
+LoadingTitle.Text = "VORTEX ENGINE // COMPLETE"
+LoadingTitle.TextColor3 = AccentColor
+LoadingTitle.TextSize = 14
+
+local LoadingSub = Instance.new("TextLabel", LoadingBox)
+LoadingSub.Size = UDim2.new(1, 0, 0, 20)
+LoadingSub.Position = UDim2.new(0, 0, 0, 58)
+LoadingSub.BackgroundTransparency = 1
+LoadingSub.Font = Enum.Font.Code
+LoadingSub.Text = "INITIALIZING ALL FEATURES..."
+LoadingSub.TextColor3 = TextMuted
+LoadingSub.TextSize = 10
+
+local BarBg = Instance.new("Frame", LoadingBox)
+BarBg.Size = UDim2.new(0, 380, 0, 4)
+BarBg.Position = UDim2.new(0.5, -190, 0.78, 0)
+BarBg.BackgroundColor3 = CardDark
+BarBg.BorderSizePixel = 0
+Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
+
+local BarFill = Instance.new("Frame", BarBg)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = AccentColor
+BarFill.BorderSizePixel = 0
+Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
+
+TweenService:Create(BarFill, TweenInfo.new(1.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+task.wait(1.3)
+LoadingFrame:Destroy()
+
+-- KEY AUTHENTICATION WINDOW
+local KeyAuthGranted = false
+local KeyGui = Instance.new("Frame", ScreenGui)
+KeyGui.Size = UDim2.new(0, 420, 0, 250)
+KeyGui.Position = UDim2.new(0.5, -210, 0.5, -125)
+KeyGui.BackgroundColor3 = SidebarDark
+KeyGui.BorderSizePixel = 0
+KeyGui.ZIndex = 500
+Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 10)
+
+local KeyGlow = Instance.new("UIStroke", KeyGui)
+KeyGlow.Color = AccentColor
+KeyGlow.Thickness = 1.2
+KeyGlow.Transparency = 0.5
+
+local KeyTitle = Instance.new("TextLabel", KeyGui)
+KeyTitle.Size = UDim2.new(1, 0, 0, 35)
+KeyTitle.Position = UDim2.new(0, 0, 0, 20)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Text = "VORTEX LICENSE SYSTEM"
+KeyTitle.TextColor3 = AccentColor
+KeyTitle.TextSize = 15
+
+local KeySub = Instance.new("TextLabel", KeyGui)
+KeySub.Size = UDim2.new(1, 0, 0, 20)
+KeySub.Position = UDim2.new(0, 0, 0, 52)
+KeySub.BackgroundTransparency = 1
+KeySub.Font = Enum.Font.Gotham
+KeySub.Text = "Hardware-locked security active on this PC"
+KeySub.TextColor3 = TextMuted
+KeySub.TextSize = 10
+
+local KeyBox = Instance.new("TextBox", KeyGui)
+KeyBox.Size = UDim2.new(0, 360, 0, 40)
+KeyBox.Position = UDim2.new(0.5, -180, 0, 90)
+KeyBox.BackgroundColor3 = CardDark
+KeyBox.BorderSizePixel = 0
+KeyBox.PlaceholderText = "Paste your license key here..."
+KeyBox.Text = ""
+KeyBox.TextColor3 = TextMain
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 12
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
+
+local SubmitBtn = Instance.new("TextButton", KeyGui)
+SubmitBtn.Size = UDim2.new(0, 360, 0, 40)
+SubmitBtn.Position = UDim2.new(0.5, -180, 0, 142)
+SubmitBtn.BackgroundColor3 = AccentColor
+SubmitBtn.BorderSizePixel = 0
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Text = "VERIFY & LAUNCH"
+SubmitBtn.TextColor3 = Color3.fromRGB(15, 15, 18)
+SubmitBtn.TextSize = 12
+Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+
+local KeyStatus = Instance.new("TextLabel", KeyGui)
+KeyStatus.Size = UDim2.new(1, 0, 0, 20)
+KeyStatus.Position = UDim2.new(0, 0, 0, 195)
+KeyStatus.BackgroundTransparency = 1
+KeyStatus.Font = Enum.Font.Gotham
+KeyStatus.Text = "Status: Waiting for license input..."
+KeyStatus.TextColor3 = TextMuted
+KeyStatus.TextSize = 10
+
+SubmitBtn.MouseButton1Click:Connect(function()
+    local inputKey = string.gsub(KeyBox.Text, "%s+", "")
+    local keyData = ValidKeys[inputKey]
+    
+    if keyData then
+        local currentNetworkTime = GetNetworkTime()
+        if keyData.BoundHWID == nil then
+            keyData.BoundHWID = HWID
+            keyData.ExpiresAt = currentNetworkTime + keyData.Duration
+        end
+        if keyData.BoundHWID ~= HWID then
+            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
+            KeyStatus.Text = "ACCESS DENIED: KEY BOUND TO ANOTHER PC"
+            return
+        end
+        if currentNetworkTime > keyData.ExpiresAt then
+            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
+            KeyStatus.Text = "ACCESS DENIED: LICENSE EXPIRED"
+            return
+        end
+
+        KeyAuthGranted = true
+        KeyStatus.TextColor3 = Color3.fromRGB(0, 255, 120)
+        KeyStatus.Text = "AUTHENTICATION SUCCESSFUL!"
+        task.wait(0.4)
+        KeyGui:Destroy()
+    else
+        KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
+        KeyStatus.Text = "ACCESS DENIED: INVALID LICENSE KEY"
+    end
+end)
+
+repeat task.wait(0.1) until KeyAuthGranted == true
 
 -- Config
 local Config = {
@@ -88,7 +278,6 @@ local Config = {
 local Cache = { Generators = {}, Pallets = {}, Windows = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
 local ActiveBindsUI = {}
 
--- Watermark (Кнопка открытия меню)
 local Watermark = Instance.new("TextButton", ScreenGui)
 Watermark.Name = "Watermark"
 Watermark.Size = UDim2.new(0, 160, 0, 26)
@@ -132,14 +321,13 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Main Interface Framework
 local MainMenu = Instance.new("Frame", ScreenGui)
 MainMenu.Name = "MainMenu"
 MainMenu.Size = UDim2.new(0, 680, 0, 420)
 MainMenu.Position = UDim2.new(0.5, -340, 0.5, -210)
 MainMenu.BackgroundColor3 = BgDark
 MainMenu.BorderSizePixel = 0
-MainMenu.Visible = true -- Сразу делаем видимым, чтобы не зависать
+MainMenu.Visible = false
 
 Instance.new("UICorner", MainMenu).CornerRadius = UDim.new(0, 8)
 local MenuStroke = Instance.new("UIStroke", MainMenu)
@@ -204,7 +392,6 @@ ContentArea.Size = UDim2.new(1, -165, 1, -15)
 ContentArea.Position = UDim2.new(0, 155, 0, 10)
 ContentArea.BackgroundTransparency = 1
 
--- ОТОБРАЖАТЕЛЬ БИНДОВ НА ЭКРАНЕ
 local KeybindsDisplay = Instance.new("Frame", ScreenGui)
 KeybindsDisplay.Name = "VortexKeybindsList"
 KeybindsDisplay.Size = UDim2.new(0, 160, 0, 150)
@@ -603,7 +790,6 @@ local function updateTriangleRing(enabled, count, radius, color)
     end
 end
 
--- ПОРТАЛ-ТЕЛЕПОРТ
 local PortalPart = Instance.new("Part")
 PortalPart.Name = "VortexPortal"
 PortalPart.Size = Vector3.new(4, 7, 1)
@@ -662,7 +848,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- AUTO DAGGER
 local function ListenToKillerAttacks(killerChar)
     local hum = killerChar:FindFirstChildOfClass("Humanoid")
     if not hum or hum:GetAttribute("VortexHooked") then return end
@@ -782,7 +967,6 @@ end
 
 RunService.Heartbeat:Connect(function()
     ProcessSkillCheckFast()
-    ProcessFlowstate()
     if Config.SpeedHack and LocalPlayer.Character then
         local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = Config.SpeedValue end
