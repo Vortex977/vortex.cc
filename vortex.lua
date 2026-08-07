@@ -1,5 +1,5 @@
 --[[
-    Vortex Hub // Region of Violence (VD) - Complete Edition with Fixed Keybinds Display
+    Vortex Hub // Region of Violence (VD) - Final Edition
     Author: TWKS
 ]]--
 
@@ -263,7 +263,7 @@ local Config = {
     VisualSpin = false,
     SpinSpeed = 50,
     Crosshair = false,
-    KillerESPColor = Color3.fromRGB(255, 255, 255),
+    KillerESPColor = Color3.fromRGB(200, 50, 50), -- Неяркий красный для киллера
     PalletESPColor = Color3.fromRGB(200, 200, 200)
 }
 
@@ -526,7 +526,7 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingKb = false end
 end)
 
--- Обновление окошка биндов: отображает забиндженные функции приглушенным цветом (независимо от того, включены они или нет)
+-- Отображение всех забиндженных функций в приглушенном (не ярком) виде
 local function UpdateKeybindsUI(name, keyName, hasKey)
     local label = ActiveBindsUI[name]
     if hasKey and keyName ~= "" then
@@ -535,7 +535,7 @@ local function UpdateKeybindsUI(name, keyName, hasKey)
             label.Size = UDim2.new(1, 0, 0, 18)
             label.BackgroundTransparency = 1
             label.Font = Enum.Font.Gotham
-            label.TextColor3 = TextMuted -- Сделали приглушенным неярким цветом
+            label.TextColor3 = Color3.fromRGB(130, 130, 140) -- Темноватый приглушенный цвет
             label.TextSize = 10
             label.TextXAlignment = Enum.TextXAlignment.Left
             ActiveBindsUI[name] = label
@@ -1071,9 +1071,9 @@ RunService.RenderStepped:Connect(function(dt)
 
         if Config.PalletESP then
             for _, pal in ipairs(Cache.Pallets) do
-                if not pal:FindFirstChild("PalletHL") then,
+                if not pal:FindFirstChild("PalletHL") then
                     local hl = Instance.new("Highlight", pal) hl.Name = "PalletHL" hl.Adornee = pal
-                    hl.FillColor = Config.PalletESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
+                    hl.FillColor = AccentColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
                 end
             end
         else
