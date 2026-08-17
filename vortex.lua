@@ -63,6 +63,13 @@ local function SaveData(key, hwid, activationTime)
     end
 end
 
+-- Удаление существующих эффектов размытия из игры/прошлых запусков
+for _, v in pairs(Lighting:GetChildren()) do
+    if v:IsA("BlurEffect") then
+        v:Destroy()
+    end
+end
+
 -- ====================================================================--
 --                       LOADING SCREEN UI                            --
 --===================================================================--
@@ -262,13 +269,6 @@ local function LoadMainVortexHub(usedKey, keyType)
     local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
     local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-    -- Blur Effect Control
-    local BlurEffect = Lighting:FindFirstChild("VortexBlur") or Instance.new("BlurEffect")
-    BlurEffect.Name = "VortexBlur"
-    BlurEffect.Size = 18
-    BlurEffect.Enabled = true
-    BlurEffect.Parent = Lighting
-
     local Window = Fluent:CreateWindow({
         Title = "VORTEX HUB | Violence District",
         SubTitle = "License: " .. keyType,
@@ -278,11 +278,6 @@ local function LoadMainVortexHub(usedKey, keyType)
         Theme = "Dark",
         MinimizeKey = Enum.KeyCode.RightControl
     })
-
-    -- Toggle Blur on Window Minimize/Close
-    Window:OnMinimize(function(minimized)
-        BlurEffect.Enabled = not minimized
-    end)
 
     -- ==================== DRAGGABLE WATERMARK WITH FPS ====================
     local WatermarkGui = Instance.new("ScreenGui")
