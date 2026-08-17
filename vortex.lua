@@ -1,5 +1,5 @@
 --====================================================================--
---             VORTEX HUB - VIOLENCE DISTRICT (FIXED BUILD)            --
+--             VORTEX HUB - VIOLENCE DISTRICT (STABLE BUILD)          --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
@@ -9,7 +9,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
-local KeyFileName = "VortexHub_Key.txt" -- Изменил формат для совместимости со всеми экзекуторами
+local KeyFileName = "VortexHub_Key.txt"
 
 -- База ключей
 local KeyDatabase = {
@@ -18,7 +18,17 @@ local KeyDatabase = {
     ["VTX-30D-92KF8"] = { type = "30 Days VIP" }
 }
 
--- Безопасная работа с файлами (чтобы не крашило экзекутор)
+-- Защищенный выбор UI-контейнера
+local UI_PARENT
+if gethui then
+    UI_PARENT = gethui()
+elseif CoreGui then
+    UI_PARENT = CoreGui
+else
+    UI_PARENT = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Безопасная работа с файлами ключей
 local function LoadSavedKey()
     local success, result = pcall(function()
         if isfile and isfile(KeyFileName) then
@@ -36,18 +46,13 @@ local function SaveKey(key)
     end)
 end
 
-local UI_PARENT = (gethui and gethui()) or CoreGui
-if not pcall(function() local _ = UI_PARENT.Name end) then
-    UI_PARENT = LocalPlayer:WaitForChild("PlayerGui")
-end
-
 -- ====================================================================--
 --                       LOADING & KEY SYSTEM                         --
 --===================================================================--
 
-local function ShowLoadingAndKeySystem(onSuccess)
+local function ShowKeySystem(onSuccess)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "VortexLoader"
+    ScreenGui.Name = "VortexKeyLoader"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = UI_PARENT
 
@@ -90,45 +95,43 @@ local function ShowLoadingAndKeySystem(onSuccess)
     local Status = Instance.new("TextLabel", Main)
     Status.Size = UDim2.new(1, 0, 0, 20)
     Status.Position = UDim2.new(0, 0, 0, 165)
-    Status.Text = "Checking saved data..."
+    Status.Text = "Checking key status..."
     Status.Font = Enum.Font.Gotham
     Status.TextColor3 = Color3.fromRGB(160, 160, 180)
     Status.TextSize = 12
     Status.BackgroundTransparency = 1
 
-    local function Authenticate(key)
-        local inputKey = key:gsub("%s+", "")
-        local keyData = KeyDatabase[inputKey]
+    local function ValidateKey(inputKey)
+        local keyClean = inputKey:gsub("%s+", "")
+        local keyData = KeyDatabase[keyClean]
 
         if keyData then
-            SaveKey(inputKey)
+            SaveKey(keyClean)
             Status.TextColor3 = Color3.fromRGB(100, 255, 120)
             Status.Text = "Access Granted! Loading..."
-            task.wait(0.5)
+            task.wait(0.4)
             ScreenGui:Destroy()
-            onSuccess(inputKey, keyData.type)
+            onSuccess(keyClean, keyData.type)
+            return true
         else
             Status.TextColor3 = Color3.fromRGB(255, 80, 80)
-            Status.Text = "Invalid Key!"
+            Status.Text = "Invalid License Key!"
+            return false
         end
     end
 
-    -- Проверка сохраненного ключа при запуске
+    -- Авторизация по сохраненному файлу
     task.spawn(function()
-        local savedKey = LoadSavedKey()
-        if savedKey and KeyDatabase[savedKey:gsub("%s+", "")] then
-            Status.TextColor3 = Color3.fromRGB(100, 255, 120)
-            Status.Text = "Auto-Login Successful!"
-            task.wait(0.5)
-            ScreenGui:Destroy()
-            onSuccess(savedKey, KeyDatabase[savedKey:gsub("%s+", "")].type)
+        local saved = LoadSavedKey()
+        if saved and ValidateKey(saved) then
+            -- Успешный авто-вход
         else
-            Status.Text = "Awaiting License Key..."
+            Status.Text = "Enter key to continue"
         end
     end)
 
     SubmitBtn.MouseButton1Click:Connect(function()
-        Authenticate(TextBox.Text)
+        ValidateKey(TextBox.Text)
     end)
 end
 
@@ -138,10 +141,9 @@ end
 
 local function LoadMainVortexHub(usedKey, keyType)
     local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-    -- ВОЗВРАЩАЕМ МЕНЕДЖЕРЫ НАСТРОЕК И КОНФИГОВ
     local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
     local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-    
+
     local Window = Fluent:CreateWindow({
         Title = "VORTEX HUB | Violence District",
         SubTitle = "License: " .. keyType,
@@ -152,9 +154,10 @@ local function LoadMainVortexHub(usedKey, keyType)
         MinimizeKey = Enum.KeyCode.RightControl
     })
 
-    -- ==================== MODERN WATERMARK & KEYBINDS ====================
+    -- ==================== WATERMARK & KEYBINDS ====================
     local VisualsGui = Instance.new("ScreenGui")
-    VisualsGui.Name = "VortexVisualsUI"
+    VisualsGui.Name = "VortexVisualsOverlay"
+    VisualsGui.ResetOnSpawn = false
     VisualsGui.Parent = UI_PARENT
 
     local WmFrame = Instance.new("Frame", VisualsGui)
@@ -176,8 +179,8 @@ local function LoadMainVortexHub(usedKey, keyType)
     WmText.TextXAlignment = Enum.TextXAlignment.Left
 
     local KbFrame = Instance.new("Frame", VisualsGui)
-    KbFrame.Size = UDim2.new(0, 170, 0, 32) 
-    KbFrame.Position = UDim2.new(0, 15, 0, 60)
+    KbFrame.Size = UDim2.new(0, 170, 0, 32)
+    KbFrame.Position = UDim2.new(0, 15, 0, 55)
     KbFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
     KbFrame.BorderSizePixel = 0
     KbFrame.ClipsDescendants = true
@@ -235,7 +238,7 @@ local function LoadMainVortexHub(usedKey, keyType)
                 item.BindLbl.Text = "[" .. bindStr .. "]"
                 count = count + 1
                 if item.Active then
-                    item.NameLbl.TextColor3 = Color3.fromRGB(168, 85, 247) 
+                    item.NameLbl.TextColor3 = Color3.fromRGB(168, 85, 247)
                     item.BindLbl.TextColor3 = Color3.fromRGB(220, 220, 255)
                 else
                     item.NameLbl.TextColor3 = Color3.fromRGB(100, 100, 110)
@@ -275,12 +278,12 @@ local function LoadMainVortexHub(usedKey, keyType)
         UpdateKeybindList()
     end
 
-    -- ==================== MENU & FEATURES ====================
+    -- ==================== TABS & FEATURES ====================
     local Tabs = {
         Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
         Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
         Player = Window:AddTab({ Title = "Player", Icon = "user" }),
-        Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }) -- ВОТ ТВОЯ ВКЛАДКА НАСТРОЕК
+        Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
     }
 
     local Features = {
@@ -294,13 +297,23 @@ local function LoadMainVortexHub(usedKey, keyType)
         CartoonKillerCone = false
     }
 
+    -- COMBAT
     local ToggleDagger = Tabs.Combat:AddToggle("AutoDagger", {Title = "Auto Dagger / Parry", Default = false})
     ToggleDagger:OnChanged(function(Val) Features.AutoDagger = Val; SetKeybindState("Auto Dagger", nil, Val) end)
-    Tabs.Combat:AddKeybind("AutoDaggerKey", {Title = "Auto Dagger Key", Mode = "Toggle", Default = "NONE", Callback = function(Val) ToggleDagger:SetValue(Val) end, ChangedCallback = function(NewBind) SetKeybindState("Auto Dagger", NewBind, Features.AutoDagger) end})
+    Tabs.Combat:AddKeybind("AutoDaggerKey", {
+        Title = "Auto Dagger Key", Mode = "Toggle", Default = "NONE",
+        Callback = function(Val) ToggleDagger:SetValue(Val) end,
+        ChangedCallback = function(NewBind) SetKeybindState("Auto Dagger", NewBind, Features.AutoDagger) end
+    })
 
+    -- VISUALS
     local TogglePlayers = Tabs.Visuals:AddToggle("ESP_Players", {Title = "Player / Killer ESP", Default = false})
     TogglePlayers:OnChanged(function(Val) Features.ESP_Players = Val; SetKeybindState("Player ESP", nil, Val) end)
-    Tabs.Visuals:AddKeybind("ESPKey", {Title = "Toggle ESP Key", Mode = "Toggle", Default = "NONE", Callback = function(Val) TogglePlayers:SetValue(Val) end, ChangedCallback = function(NewBind) SetKeybindState("Player ESP", NewBind, Features.ESP_Players) end})
+    Tabs.Visuals:AddKeybind("ESPKey", {
+        Title = "Toggle ESP Key", Mode = "Toggle", Default = "NONE",
+        Callback = function(Val) TogglePlayers:SetValue(Val) end,
+        ChangedCallback = function(NewBind) SetKeybindState("Player ESP", NewBind, Features.ESP_Players) end
+    })
 
     Tabs.Visuals:AddColorpicker("KillerColor", {Title = "Killer ESP Color", Default = Color3.fromRGB(239, 68, 68), Callback = function(Val) Features.ESP_KillerColor = Val end})
     Tabs.Visuals:AddColorpicker("SurvivorColor", {Title = "Survivor ESP Color", Default = Color3.fromRGB(34, 197, 94), Callback = function(Val) Features.ESP_SurvivorColor = Val end})
@@ -311,14 +324,20 @@ local function LoadMainVortexHub(usedKey, keyType)
     local ToggleCartoonCone = Tabs.Visuals:AddToggle("CartoonConeToggle", {Title = "Cartoon Killer Vision Lines", Default = false})
     ToggleCartoonCone:OnChanged(function(Val) Features.CartoonKillerCone = Val end)
 
+    -- PLAYER
     local ToggleSpeed = Tabs.Player:AddToggle("SpeedHack", {Title = "SpeedHack", Default = false})
     ToggleSpeed:OnChanged(function(Val) Features.SpeedHack = Val; SetKeybindState("SpeedHack", nil, Val) end)
-    Tabs.Player:AddKeybind("SpeedKey", {Title = "Speed Key", Mode = "Toggle", Default = "NONE", Callback = function(Val) ToggleSpeed:SetValue(Val) end, ChangedCallback = function(NewBind) SetKeybindState("SpeedHack", NewBind, Features.SpeedHack) end})
+    Tabs.Player:AddKeybind("SpeedKey", {
+        Title = "Speed Key", Mode = "Toggle", Default = "NONE",
+        Callback = function(Val) ToggleSpeed:SetValue(Val) end,
+        ChangedCallback = function(NewBind) SetKeybindState("SpeedHack", NewBind, Features.SpeedHack) end
+    })
     Tabs.Player:AddSlider("SpeedValue", {Title = "Speed Multiplier", Default = 16, Min = 16, Max = 40, Rounding = 1, Callback = function(Val) Features.SpeedValue = Val end})
 
-    -- ==================== VISUALS LOGIC ====================
+    -- ==================== VISUALS THREAD (HAT & CONE) ====================
     task.spawn(function()
-        while task.wait(0.5) do
+        while task.wait(0.4) do
+            -- Шляпа
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") then
                 local char = LocalPlayer.Character
                 local existingHat = char:FindFirstChild("VortexRiceHat")
@@ -345,6 +364,7 @@ local function LoadMainVortexHub(usedKey, keyType)
                 end
             end
 
+            -- Конус убийцы
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
                     local isKiller = p.Team and p.Team.Name:lower():find("killer")
@@ -354,7 +374,7 @@ local function LoadMainVortexHub(usedKey, keyType)
                             local cone = Instance.new("ConeHandleAdornment")
                             cone.Name = "VortexVisionCone"
                             cone.Adornee = p.Character.Head
-                            cone.CFrame = CFrame.new(0, 0, -8) * CFrame.Angles(0, 0, 0)
+                            cone.CFrame = CFrame.new(0, 0, -8)
                             cone.Radius = 4
                             cone.Height = 16
                             cone.Color3 = Color3.fromRGB(255, 50, 50)
@@ -370,6 +390,7 @@ local function LoadMainVortexHub(usedKey, keyType)
         end
     end)
 
+    -- ==================== RENDER LOOP ====================
     local ESP_Cache = {}
     local function ApplyESP(inst, color)
         local hl = ESP_Cache[inst]
@@ -414,20 +435,22 @@ local function LoadMainVortexHub(usedKey, keyType)
         end
     end)
 
-    -- ==================== ИНИЦИАЛИЗАЦИЯ ВКЛАДКИ SETTINGS И КОНФИГОВ ====================
+    -- ИНИЦИАЛИЗАЦИЯ НАСТРОЕК Fluent
     SaveManager:SetLibrary(Fluent)
     InterfaceManager:SetLibrary(Fluent)
-    
     SaveManager:IgnoreThemeSettings()
     SaveManager:SetIgnoreIndexes({})
     
-    InterfaceManager:BuildInterfaceSection(Tabs.Settings) -- Добавляет смену цвета и бинд меню
-    SaveManager:BuildConfigSection(Tabs.Settings) -- Добавляет систему конфигов
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+    SaveManager:BuildConfigSection(Tabs.Settings)
 
     Window:SelectTab(1)
 end
 
--- ЗАПУСК
-ShowLoadingAndKeySystem(function(key, keyType)
+-- ====================================================================--
+--                            STARTUP                                  --
+--===================================================================--
+
+ShowKeySystem(function(key, keyType)
     LoadMainVortexHub(key, keyType)
 end)
