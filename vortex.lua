@@ -1,5 +1,5 @@
 --====================================================================--
---        VORTEX HUB - VIOLENCE DISTRICT (AI CATEGORY UPDATE)         --
+--           VORTEX HUB - VIOLENCE DISTRICT (STABLE VERSION)          --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
@@ -297,12 +297,11 @@ local function LoadMainVortexHub(usedKey, keyType)
         UpdateKeybindList()
     end
 
-    -- ==================== TABS (ADDED AI TAB) ====================
+    -- ==================== TABS ====================
     local Tabs = {
         Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
         Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
         Player = Window:AddTab({ Title = "Player", Icon = "user" }),
-        AI = Window:AddTab({ Title = "AI Assistant", Icon = "cpu" }),
         Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
     }
 
@@ -323,10 +322,7 @@ local function LoadMainVortexHub(usedKey, keyType)
         AutoSkillCheck = false,
         FOVChanger = false,
         FOVValue = 70,
-        Crosshair = false,
-        Moonwalk = false,
-        Spin360Left = false,
-        Spin360Right = false
+        Crosshair = false
     }
 
     -- COMBAT
@@ -394,96 +390,6 @@ local function LoadMainVortexHub(usedKey, keyType)
         ChangedCallback = function(NewBind) SetKeybindState("SpeedHack", NewBind, Features.SpeedHack) end
     })
     Tabs.Player:AddSlider("SpeedValue", {Title = "Speed Multiplier", Default = 16, Min = 16, Max = 40, Rounding = 1, Callback = function(Val) Features.SpeedValue = Val end})
-
-    -- ==================== AI ASSISTANT TAB (MOONWALK & 360) ====================
-    local ToggleMoonwalk = Tabs.AI:AddToggle("MoonwalkToggle", {Title = "AI Moonwalk (W+D+S Face & A+D Tap)", Default = false})
-    ToggleMoonwalk:OnChanged(function(Val) Features.Moonwalk = Val; SetKeybindState("AI Moonwalk", nil, Val) end)
-    Tabs.AI:AddKeybind("MoonwalkKey", {
-        Title = "Moonwalk Bind", Mode = "Toggle", Default = "NONE",
-        Callback = function(Val) ToggleMoonwalk:SetValue(Val) end,
-        ChangedCallback = function(NewBind) SetKeybindState("AI Moonwalk", NewBind, Features.Moonwalk) end
-    })
-
-    Tabs.AI:AddDivider()
-
-    local ToggleSpinL = Tabs.AI:AddToggle("Spin360LToggle", {Title = "360 Spin Left (W+D+S+A)", Default = false})
-    ToggleSpinL:OnChanged(function(Val) Features.Spin360Left = Val; SetKeybindState("360 Left", nil, Val) end)
-    Tabs.AI:AddKeybind("SpinLKey", {
-        Title = "360 Left Bind", Mode = "Toggle", Default = "NONE",
-        Callback = function(Val) ToggleSpinL:SetValue(Val) end,
-        ChangedCallback = function(NewBind) SetKeybindState("360 Left", NewBind, Features.Spin360Left) end
-    })
-
-    local ToggleSpinR = Tabs.AI:AddToggle("Spin360RToggle", {Title = "360 Spin Right (W+A+S+D)", Default = false})
-    ToggleSpinR:OnChanged(function(Val) Features.Spin360Right = Val; SetKeybindState("360 Right", nil, Val) end)
-    Tabs.AI:AddKeybind("SpinRKey", {
-        Title = "360 Right Bind", Mode = "Toggle", Default = "NONE",
-        Callback = function(Val) ToggleSpinR:SetValue(Val) end,
-        ChangedCallback = function(NewBind) SetKeybindState("360 Right", NewBind, Features.Spin360Right) end
-    })
-
-    -- ==================== AI ASSISTANT LOGIC ====================
-    task.spawn(function()
-        local lastTap = tick()
-        local tapToggle = false
-        while task.wait(0.01) do
-            pcall(function()
-                -- Мунволк: при зажатии W персонаж разворачивается лицом к экрану через w+d+s и держит тайминг тапов a+d
-                if Features.Moonwalk and UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                    local char = LocalPlayer.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        local camLook = Camera.CFrame.LookVector
-                        local flatLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
-                        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position, char.HumanoidRootPart.Position - flatLook)
-                        
-                        if tick() - lastTap >= 0.08 then
-                            tapToggle = not tapToggle
-                            if tapToggle then
-                                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.A, false, game)
-                                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.D, false, game)
-                            else
-                                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.D, false, game)
-                                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.A, false, game)
-                            end
-                            lastTap = tick()
-                        end
-                    end
-                end
-
-                -- 360 Spin Left
-                if Features.Spin360Left then
-                    Camera.CFrame = Camera.CFrame * CFrame.Angles(0, math.rad(-25), 0)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.D, false, game)
-                    task.wait(0.02)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.S, false, game)
-                    task.wait(0.02)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.D, false, game)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.A, false, game)
-                    task.wait(0.02)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.S, false, game)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.A, false, game)
-                end
-
-                -- 360 Spin Right
-                if Features.Spin360Right then
-                    Camera.CFrame = Camera.CFrame * CFrame.Angles(0, math.rad(25), 0)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.A, false, game)
-                    task.wait(0.02)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.S, false, game)
-                    task.wait(0.02)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.A, false, game)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.D, false, game)
-                    task.wait(0.02)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.S, false, game)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.D, false, game)
-                end
-            end)
-        end
-    end)
 
     -- ==================== AIMBOT ====================
     RunService.RenderStepped:Connect(function()
