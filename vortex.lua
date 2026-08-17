@@ -1,5 +1,5 @@
 --====================================================================--
---             VORTEX HUB - VIOLENCE DISTRICT (STABLE BUILD)          --
+--             VORTEX HUB - VIOLENCE DISTRICT (FIXED & ULTIMATE)      --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
@@ -7,18 +7,17 @@ local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 local KeyFileName = "VortexHub_Key.txt"
 
--- База ключей
 local KeyDatabase = {
     ["admin2013"] = { type = "Admin" },
     ["VTX-1D-8F92A"] = { type = "1 Day Pass" },
     ["VTX-30D-92KF8"] = { type = "30 Days VIP" }
 }
 
--- Защищенный выбор UI-контейнера
 local UI_PARENT
 if gethui then
     UI_PARENT = gethui()
@@ -28,7 +27,6 @@ else
     UI_PARENT = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Безопасная работа с файлами ключей
 local function LoadSavedKey()
     local success, result = pcall(function()
         if isfile and isfile(KeyFileName) then
@@ -120,11 +118,9 @@ local function ShowKeySystem(onSuccess)
         end
     end
 
-    -- Авторизация по сохраненному файлу
     task.spawn(function()
         local saved = LoadSavedKey()
         if saved and ValidateKey(saved) then
-            -- Успешный авто-вход
         else
             Status.Text = "Enter key to continue"
         end
@@ -154,7 +150,7 @@ local function LoadMainVortexHub(usedKey, keyType)
         MinimizeKey = Enum.KeyCode.RightControl
     })
 
-    -- ==================== WATERMARK & KEYBINDS ====================
+    -- ==================== CLEAN & ALIGNED KEYBINDS UI ====================
     local VisualsGui = Instance.new("ScreenGui")
     VisualsGui.Name = "VortexVisualsOverlay"
     VisualsGui.ResetOnSpawn = false
@@ -179,7 +175,7 @@ local function LoadMainVortexHub(usedKey, keyType)
     WmText.TextXAlignment = Enum.TextXAlignment.Left
 
     local KbFrame = Instance.new("Frame", VisualsGui)
-    KbFrame.Size = UDim2.new(0, 170, 0, 32)
+    KbFrame.Size = UDim2.new(0, 180, 0, 32)
     KbFrame.Position = UDim2.new(0, 15, 0, 55)
     KbFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
     KbFrame.BorderSizePixel = 0
@@ -188,7 +184,7 @@ local function LoadMainVortexHub(usedKey, keyType)
     Instance.new("UIStroke", KbFrame).Color = Color3.fromRGB(45, 45, 60)
 
     local KbTitle = Instance.new("TextLabel", KbFrame)
-    KbTitle.Size = UDim2.new(1, -20, 0, 32)
+    KbTitle.Size = UDim2.new(1, -20, 0, 30)
     KbTitle.Position = UDim2.new(0, 10, 0, 0)
     KbTitle.BackgroundTransparency = 1
     KbTitle.Text = "KEYBINDS"
@@ -198,15 +194,13 @@ local function LoadMainVortexHub(usedKey, keyType)
     KbTitle.TextXAlignment = Enum.TextXAlignment.Left
 
     local Container = Instance.new("Frame", KbFrame)
-    Container.Size = UDim2.new(1, 0, 1, -32)
-    Container.Position = UDim2.new(0, 0, 0, 32)
+    Container.Size = UDim2.new(1, -20, 1, -32)
+    Container.Position = UDim2.new(0, 10, 0, 30)
     Container.BackgroundTransparency = 1
 
     local KbList = Instance.new("UIListLayout", Container)
     KbList.SortOrder = Enum.SortOrder.LayoutOrder
-    KbList.Padding = UDim.new(0, 4)
-    Instance.new("UIPadding", Container).PaddingLeft = UDim.new(0, 10)
-    Instance.new("UIPadding", Container).PaddingRight = UDim.new(0, 10)
+    KbList.Padding = UDim.new(0, 5)
 
     local function MakeDraggable(gui)
         local dragging, dragStart, startPos
@@ -241,15 +235,15 @@ local function LoadMainVortexHub(usedKey, keyType)
                     item.NameLbl.TextColor3 = Color3.fromRGB(168, 85, 247)
                     item.BindLbl.TextColor3 = Color3.fromRGB(220, 220, 255)
                 else
-                    item.NameLbl.TextColor3 = Color3.fromRGB(100, 100, 110)
-                    item.BindLbl.TextColor3 = Color3.fromRGB(100, 100, 110)
+                    item.NameLbl.TextColor3 = Color3.fromRGB(120, 120, 130)
+                    item.BindLbl.TextColor3 = Color3.fromRGB(120, 120, 130)
                 end
             else
                 item.Frame.Visible = false
             end
         end
-        local targetHeight = count > 0 and (32 + (count * 18) + 8) or 32
-        TweenService:Create(KbFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 170, 0, targetHeight)}):Play()
+        local targetHeight = count > 0 and (35 + (count * 20)) or 32
+        TweenService:Create(KbFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 180, 0, targetHeight)}):Play()
     end
 
     local function SetKeybindState(name, bindText, isActive)
@@ -257,6 +251,7 @@ local function LoadMainVortexHub(usedKey, keyType)
             local ItemFrame = Instance.new("Frame", Container)
             ItemFrame.Size = UDim2.new(1, 0, 0, 16)
             ItemFrame.BackgroundTransparency = 1
+
             local NameLabel = Instance.new("TextLabel", ItemFrame)
             NameLabel.Size = UDim2.new(0.65, 0, 1, 0)
             NameLabel.BackgroundTransparency = 1
@@ -264,6 +259,7 @@ local function LoadMainVortexHub(usedKey, keyType)
             NameLabel.Font = Enum.Font.GothamMedium
             NameLabel.TextSize = 11
             NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
             local BindLabel = Instance.new("TextLabel", ItemFrame)
             BindLabel.Size = UDim2.new(0.35, 0, 1, 0)
             BindLabel.Position = UDim2.new(0.65, 0, 0, 0)
@@ -271,6 +267,7 @@ local function LoadMainVortexHub(usedKey, keyType)
             BindLabel.Font = Enum.Font.Gotham
             BindLabel.TextSize = 11
             BindLabel.TextXAlignment = Enum.TextXAlignment.Right
+
             ActiveBinds[name] = { Frame = ItemFrame, NameLbl = NameLabel, BindLbl = BindLabel, Bind = "NONE", Active = false }
         end
         if bindText ~= nil then ActiveBinds[name].Bind = bindText end
@@ -278,7 +275,7 @@ local function LoadMainVortexHub(usedKey, keyType)
         UpdateKeybindList()
     end
 
-    -- ==================== TABS & FEATURES ====================
+    -- ==================== TABS ====================
     local Tabs = {
         Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
         Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
@@ -294,7 +291,8 @@ local function LoadMainVortexHub(usedKey, keyType)
         SpeedHack = false,
         SpeedValue = 16,
         RiceHat = false,
-        CartoonKillerCone = false
+        RedStainVisual = false,
+        AutoSkillCheck = false
     }
 
     -- COMBAT
@@ -321,10 +319,16 @@ local function LoadMainVortexHub(usedKey, keyType)
     local ToggleHat = Tabs.Visuals:AddToggle("RiceHatToggle", {Title = "3D Chinese Hat", Default = false})
     ToggleHat:OnChanged(function(Val) Features.RiceHat = Val end)
 
-    local ToggleCartoonCone = Tabs.Visuals:AddToggle("CartoonConeToggle", {Title = "Cartoon Killer Vision Lines", Default = false})
-    ToggleCartoonCone:OnChanged(function(Val) Features.CartoonKillerCone = Val end)
+    local ToggleRedStain = Tabs.Visuals:AddToggle("RedStainToggle", {Title = "Killer Red Stain (Vision Light)", Default = false})
+    ToggleRedStain:OnChanged(function(Val) Features.RedStainVisual = Val end)
 
     -- PLAYER
+    local ToggleSkillCheck = Tabs.Player:AddToggle("AutoSkillCheckToggle", {Title = "Auto Skill Checks", Default = false})
+    ToggleSkillCheck:OnChanged(function(Val)
+        Features.AutoSkillCheck = Val
+        SetKeybindState("Auto SkillCheck", nil, Val)
+    end)
+
     local ToggleSpeed = Tabs.Player:AddToggle("SpeedHack", {Title = "SpeedHack", Default = false})
     ToggleSpeed:OnChanged(function(Val) Features.SpeedHack = Val; SetKeybindState("SpeedHack", nil, Val) end)
     Tabs.Player:AddKeybind("SpeedKey", {
@@ -334,29 +338,34 @@ local function LoadMainVortexHub(usedKey, keyType)
     })
     Tabs.Player:AddSlider("SpeedValue", {Title = "Speed Multiplier", Default = 16, Min = 16, Max = 40, Rounding = 1, Callback = function(Val) Features.SpeedValue = Val end})
 
-    -- ==================== VISUALS THREAD (HAT & CONE) ====================
+    -- ==================== VISUALS THREAD (HAT & RED STAIN) ====================
     task.spawn(function()
-        while task.wait(0.4) do
-            -- Шляпа
+        while task.wait(0.3) do
+            -- 1. Исправленная Шляпа
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") then
                 local char = LocalPlayer.Character
+                local head = char.Head
                 local existingHat = char:FindFirstChild("VortexRiceHat")
+
                 if Features.RiceHat then
                     if not existingHat then
                         local hat = Instance.new("Part")
                         hat.Name = "VortexRiceHat"
-                        hat.Size = Vector3.new(2.5, 0.6, 2.5)
+                        hat.Size = Vector3.new(3, 0.7, 3)
                         hat.CanCollide = false
                         hat.Massless = true
                         hat.Color = Color3.fromRGB(140, 50, 255)
                         hat.Material = Enum.Material.SmoothPlastic
+                        
                         local mesh = Instance.new("SpecialMesh", hat)
                         mesh.MeshType = Enum.MeshType.Cone
-                        mesh.Scale = Vector3.new(2.5, 0.6, 2.5)
-                        local weld = Instance.new("Weld", hat)
-                        weld.Part0 = char.Head
+                        mesh.Scale = Vector3.new(3, 0.7, 3)
+
+                        local weld = Instance.new("WeldConstraint")
+                        weld.Part0 = head
                         weld.Part1 = hat
-                        weld.C0 = CFrame.new(0, 0.7, 0)
+                        hat.CFrame = head.CFrame * CFrame.new(0, 0.75, 0)
+                        weld.Parent = hat
                         hat.Parent = char
                     end
                 else
@@ -364,28 +373,64 @@ local function LoadMainVortexHub(usedKey, keyType)
                 end
             end
 
-            -- Конус убийцы
+            -- 2. Красный Взгляд Маньяка (Red Stain Light)
             for _, p in pairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                    local isKiller = p.Team and p.Team.Name:lower():find("killer")
-                    local existingCone = p.Character:FindFirstChild("VortexVisionCone")
-                    if Features.CartoonKillerCone and isKiller then
-                        if not existingCone then
-                            local cone = Instance.new("ConeHandleAdornment")
-                            cone.Name = "VortexVisionCone"
-                            cone.Adornee = p.Character.Head
-                            cone.CFrame = CFrame.new(0, 0, -8)
-                            cone.Radius = 4
-                            cone.Height = 16
-                            cone.Color3 = Color3.fromRGB(255, 50, 50)
-                            cone.Transparency = 0.6
-                            cone.ZIndex = 1
-                            cone.Parent = p.Character
+                if p.Character and p.Character:FindFirstChild("Head") then
+                    local isKiller = (p.Team and p.Team.Name:lower():find("killer")) or (p.Character:FindFirstChild("Killer"))
+                    local existingStain = p.Character.Head:FindFirstChild("VortexRedStain")
+
+                    if Features.RedStainVisual and isKiller then
+                        if not existingStain then
+                            local light = Instance.new("SpotLight")
+                            light.Name = "VortexRedStain"
+                            light.Color = Color3.fromRGB(255, 0, 0)
+                            light.Brightness = 8
+                            light.Range = 25
+                            light.Angle = 60
+                            light.Face = Enum.NormalId.Front
+                            light.Parent = p.Character.Head
                         end
                     else
-                        if existingCone then existingCone:Destroy() end
+                        if existingStain then existingStain:Destroy() end
                     end
                 end
+            end
+        end
+    end)
+
+    -- ==================== AUTO SKILL CHECK SYSTEM ====================
+    task.spawn(function()
+        while task.wait(0.05) do
+            if Features.AutoSkillCheck then
+                pcall(function()
+                    local pGui = LocalPlayer:FindFirstChild("PlayerGui")
+                    if pGui then
+                        -- Сканируем UI игры на наличие индикатора скиллчека
+                        for _, gui in pairs(pGui:GetChildren()) do
+                            if gui:IsA("ScreenGui") and gui.Enabled then
+                                local skillCheckFrame = gui:FindFirstChild("SkillCheck") or gui:FindFirstChild("Check") or gui:FindFirstChild("Bar")
+                                if skillCheckFrame then
+                                    local pointer = skillCheckFrame:FindFirstChild("Pointer") or skillCheckFrame:FindFirstChild("Indicator")
+                                    local target = skillCheckFrame:FindFirstChild("Zone") or skillCheckFrame:FindFirstChild("Success")
+                                    
+                                    if pointer and target then
+                                        -- Если стрелочка попала в зону — нажимаем Space
+                                        local pPos = pointer.AbsolutePosition.X
+                                        local tPos = target.AbsolutePosition.X
+                                        local tSize = target.AbsoluteSize.X
+                                        
+                                        if pPos >= tPos and pPos <= (tPos + tSize) then
+                                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                                            task.wait(0.05)
+                                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                                            task.wait(0.3)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
             end
         end
     end)
@@ -435,7 +480,6 @@ local function LoadMainVortexHub(usedKey, keyType)
         end
     end)
 
-    -- ИНИЦИАЛИЗАЦИЯ НАСТРОЕК Fluent
     SaveManager:SetLibrary(Fluent)
     InterfaceManager:SetLibrary(Fluent)
     SaveManager:IgnoreThemeSettings()
