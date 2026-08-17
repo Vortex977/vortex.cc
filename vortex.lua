@@ -1,5 +1,5 @@
 --====================================================================--
---                        VORTEX HUB - VIOLENCE DISTRICT               --
+--             VORTEX HUB - VIOLENCE DISTRICT (FINAL BUILD)            --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
@@ -8,24 +8,23 @@ local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
+local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
 local HWID = RbxAnalyticsService:GetClientId()
 local KeyFileName = "VortexHub_Key.json"
 
+-- База ключей
 local KeyDatabase = {
     ["admin2013"] = { type = "Admin", duration = 99999999 },
     ["VTX-1D-8F92A"] = { type = "1 Day Pass", duration = 86400 },
     ["VTX-30D-92KF8"] = { type = "30 Days VIP", duration = 2592000 }
 }
 
-local HttpService = game:GetService("HttpService")
+-- Работа с файлами
 local function LoadSavedData()
     if isfile and readfile and isfile(KeyFileName) then
-        local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile(KeyFileName))
-        end)
+        local success, result = pcall(function() return HttpService:JSONDecode(readfile(KeyFileName)) end)
         if success then return result end
     end
     return nil
@@ -33,154 +32,140 @@ end
 
 local function SaveData(key, hwid, activationTime)
     if writefile then
-        local data = { Key = key, HWID = hwid, ActivatedAt = activationTime }
-        writefile(KeyFileName, HttpService:JSONEncode(data))
+        pcall(function()
+            writefile(KeyFileName, HttpService:JSONEncode({Key = key, HWID = hwid, ActivatedAt = activationTime}))
+        end)
     end
 end
 
 -- ====================================================================--
---                       LOADING SCREEN UI                            --
+--                       LOADING & KEY SYSTEM                         --
 --===================================================================--
 
-local function ShowLoadingScreen(callback)
+local function ShowLoadingScreen(onFinished)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "VortexLoadingUI"
-    ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = (gethui and gethui()) or CoreGui
 
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 360, 0, 200)
-    MainFrame.Position = UDim2.new(0.5, -180, 0.5, -100)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    MainFrame.BackgroundTransparency = 0.15
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Parent = ScreenGui
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Size = UDim2.new(0, 360, 0, 180)
+    Main.Position = UDim2.new(0.5, -180, 0.5, -90)
+    Main.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+    Main.BorderSizePixel = 0
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+    Instance.new("UIStroke", Main).Color = Color3.fromRGB(140, 50, 255)
 
-    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
-    local UIStroke = Instance.new("UIStroke", MainFrame)
-    UIStroke.Color = Color3.fromRGB(130, 60, 255)
-    UIStroke.Thickness = 1.5
-
-    local Title = Instance.new("TextLabel", MainFrame)
-    Title.Size = UDim2.new(1, 0, 0, 35)
+    local Title = Instance.new("TextLabel", Main)
+    Title.Size = UDim2.new(1, 0, 0, 40)
     Title.Position = UDim2.new(0, 0, 0, 20)
     Title.Text = "VORTEX HUB"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 22
     Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 22
     Title.BackgroundTransparency = 1
 
-    local Status = Instance.new("TextLabel", MainFrame)
+    local Status = Instance.new("TextLabel", Main)
     Status.Size = UDim2.new(1, 0, 0, 20)
-    Status.Position = UDim2.new(0, 0, 0, 95)
-    Status.Text = "Initializing..."
-    Status.TextColor3 = Color3.fromRGB(170, 170, 200)
-    Status.TextSize = 12
-    Status.Font = Enum.Font.GothamMedium
+    Status.Position = UDim2.new(0, 0, 0, 85)
+    Status.Text = "Starting up..."
+    Status.TextColor3 = Color3.fromRGB(160, 160, 180)
+    Status.Font = Enum.Font.Gotham
+    Status.TextSize = 13
     Status.BackgroundTransparency = 1
 
-    local BarBackground = Instance.new("Frame", MainFrame)
-    BarBackground.Size = UDim2.new(0.8, 0, 0, 6)
-    BarBackground.Position = UDim2.new(0.1, 0, 0, 130)
-    BarBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    BarBackground.BorderSizePixel = 0
-    Instance.new("UICorner", BarBackground).CornerRadius = UDim.new(1, 0)
+    local BarBG = Instance.new("Frame", Main)
+    BarBG.Size = UDim2.new(0.8, 0, 0, 6)
+    BarBG.Position = UDim2.new(0.1, 0, 0, 120)
+    BarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", BarBG).CornerRadius = UDim.new(1, 0)
 
-    local BarFill = Instance.new("Frame", BarBackground)
+    local BarFill = Instance.new("Frame", BarBG)
     BarFill.Size = UDim2.new(0, 0, 1, 0)
     BarFill.BackgroundColor3 = Color3.fromRGB(140, 50, 255)
-    BarFill.BorderSizePixel = 0
     Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
     task.spawn(function()
-        local stages = {
-            { p = 0.4, t = "Authenticating..." },
-            { p = 0.8, t = "Loading Interface..." },
-            { p = 1.0, t = "Done!" }
-        }
-        for _, stage in ipairs(stages) do
-            Status.Text = stage.t
-            TweenService:Create(BarFill, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(stage.p, 0, 1, 0)}):Play()
-            task.wait(0.3)
+        TweenService:Create(BarFill, TweenInfo.new(1, Enum.EasingStyle.Quad), {Size = UDim2.new(0.5, 0, 1, 0)}):Play()
+        task.wait(1)
+        
+        local saved = LoadSavedData()
+        local currentTime = os.time()
+        local autoLogin = false
+        local savedKeyType = ""
+
+        if saved and saved.Key and saved.HWID == HWID then
+            local keyInfo = KeyDatabase[saved.Key]
+            if keyInfo and (currentTime - saved.ActivatedAt < keyInfo.duration) then
+                autoLogin = true
+                savedKeyType = keyInfo.type
+            end
         end
-        ScreenGui:Destroy()
-        callback()
+
+        if autoLogin then
+            Status.Text = "Valid License Found! Auto-Logging in..."
+            Status.TextColor3 = Color3.fromRGB(100, 255, 120)
+            TweenService:Create(BarFill, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+            task.wait(0.6)
+            ScreenGui:Destroy()
+            onFinished(saved.Key, savedKeyType, true)
+        else
+            Status.Text = "Awaiting License Key..."
+            TweenService:Create(BarFill, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+            task.wait(0.4)
+            ScreenGui:Destroy()
+            onFinished(nil, nil, false)
+        end
     end)
 end
 
--- ====================================================================--
---                         KEY SYSTEM GUI                             --
---===================================================================--
-
-local function VerifyKeyAccess(onSuccess)
-    local savedData = LoadSavedData()
-    local currentTime = os.time()
-
-    if savedData and savedData.Key and savedData.HWID and savedData.ActivatedAt then
-        if savedData.HWID == HWID then
-            local keyInfo = KeyDatabase[savedData.Key]
-            if keyInfo and (currentTime - savedData.ActivatedAt < keyInfo.duration) then
-                onSuccess(savedData.Key, keyInfo.type)
-                return
-            end
-        end
-    end
-
+local function ShowKeySystem(onSuccess)
     local KeyGui = Instance.new("ScreenGui")
-    KeyGui.Name = "VortexKeySystem"
-    KeyGui.ResetOnSpawn = false
+    KeyGui.Name = "VortexKeyGui"
     KeyGui.Parent = (gethui and gethui()) or CoreGui
 
-    local Frame = Instance.new("Frame", KeyGui)
-    Frame.Size = UDim2.new(0, 340, 0, 220)
-    Frame.Position = UDim2.new(0.5, -170, 0.5, -110)
-    Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
-    Frame.BackgroundTransparency = 0.1
-    Frame.BorderSizePixel = 0
+    local Main = Instance.new("Frame", KeyGui)
+    Main.Size = UDim2.new(0, 340, 0, 210)
+    Main.Position = UDim2.new(0.5, -170, 0.5, -105)
+    Main.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+    Instance.new("UIStroke", Main).Color = Color3.fromRGB(140, 50, 255)
 
-    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
-    local Stroke = Instance.new("UIStroke", Frame)
-    Stroke.Color = Color3.fromRGB(130, 60, 255)
-    Stroke.Thickness = 1.5
-
-    local Title = Instance.new("TextLabel", Frame)
-    Title.Size = UDim2.new(1, 0, 0, 35)
+    local Title = Instance.new("TextLabel", Main)
+    Title.Size = UDim2.new(1, 0, 0, 30)
     Title.Position = UDim2.new(0, 0, 0, 15)
     Title.Text = "LICENSE VERIFICATION"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 16
     Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 16
     Title.BackgroundTransparency = 1
 
-    local TextBox = Instance.new("TextBox", Frame)
-    TextBox.Size = UDim2.new(0.85, 0, 0, 36)
-    TextBox.Position = UDim2.new(0.075, 0, 0, 75)
-    TextBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    local TextBox = Instance.new("TextBox", Main)
+    TextBox.Size = UDim2.new(0.8, 0, 0, 36)
+    TextBox.Position = UDim2.new(0.1, 0, 0, 65)
+    TextBox.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
     TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextBox.PlaceholderText = "Enter License Key..."
-    TextBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 120)
-    TextBox.Text = ""
-    TextBox.Font = Enum.Font.GothamMedium
+    TextBox.PlaceholderText = "Paste Key Here..."
+    TextBox.Font = Enum.Font.Gotham
     TextBox.TextSize = 13
     Instance.new("UICorner", TextBox).CornerRadius = UDim.new(0, 6)
 
-    local SubmitBtn = Instance.new("TextButton", Frame)
-    SubmitBtn.Size = UDim2.new(0.85, 0, 0, 36)
-    SubmitBtn.Position = UDim2.new(0.075, 0, 0, 125)
-    SubmitBtn.BackgroundColor3 = Color3.fromRGB(130, 50, 255)
-    SubmitBtn.Text = "UNLOCK HUB"
+    local SubmitBtn = Instance.new("TextButton", Main)
+    SubmitBtn.Size = UDim2.new(0.8, 0, 0, 36)
+    SubmitBtn.Position = UDim2.new(0.1, 0, 0, 115)
+    SubmitBtn.BackgroundColor3 = Color3.fromRGB(140, 50, 255)
+    SubmitBtn.Text = "VERIFY KEY"
     SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     SubmitBtn.Font = Enum.Font.GothamBold
     SubmitBtn.TextSize = 13
     Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
 
-    local StatusLabel = Instance.new("TextLabel", Frame)
-    StatusLabel.Size = UDim2.new(1, 0, 0, 20)
-    StatusLabel.Position = UDim2.new(0, 0, 0, 175)
-    StatusLabel.Text = ""
-    StatusLabel.TextSize = 11
-    StatusLabel.Font = Enum.Font.Gotham
-    StatusLabel.BackgroundTransparency = 1
+    local Status = Instance.new("TextLabel", Main)
+    Status.Size = UDim2.new(1, 0, 0, 20)
+    Status.Position = UDim2.new(0, 0, 0, 165)
+    Status.Text = ""
+    Status.Font = Enum.Font.Gotham
+    Status.TextSize = 12
+    Status.BackgroundTransparency = 1
 
     SubmitBtn.MouseButton1Click:Connect(function()
         local inputKey = TextBox.Text:gsub("%s+", "")
@@ -188,27 +173,25 @@ local function VerifyKeyAccess(onSuccess)
 
         if keyData then
             SaveData(inputKey, HWID, os.time())
-            StatusLabel.TextColor3 = Color3.fromRGB(80, 255, 140)
-            StatusLabel.Text = "Success! Loading Vortex..."
+            Status.TextColor3 = Color3.fromRGB(100, 255, 120)
+            Status.Text = "Access Granted! Loading..."
             task.wait(0.5)
             KeyGui:Destroy()
             onSuccess(inputKey, keyData.type)
         else
-            StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-            StatusLabel.Text = "Invalid License Key!"
+            Status.TextColor3 = Color3.fromRGB(255, 80, 80)
+            Status.Text = "Invalid or Expired Key!"
         end
     end)
 end
 
 -- ====================================================================--
---                     MAIN VORTEX HUB INTERFACE                       --
+--                         MAIN HUB INTERFACE                         --
 --===================================================================--
 
 local function LoadMainVortexHub(usedKey, keyType)
     local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-    local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-    local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
+    
     local Window = Fluent:CreateWindow({
         Title = "VORTEX HUB | Violence District",
         SubTitle = "License: " .. keyType,
@@ -219,354 +202,323 @@ local function LoadMainVortexHub(usedKey, keyType)
         MinimizeKey = Enum.KeyCode.RightControl
     })
 
-    -- Вспомогательная функция создания стильных Fluent-виджетов
-    local function CreateFluentWidget(name, size, pos)
-        local Gui = Instance.new("ScreenGui")
-        Gui.Name = name
-        Gui.ResetOnSpawn = false
-        Gui.Parent = (gethui and gethui()) or CoreGui
+    -- ==================== MODERN WATERMARK ====================
+    local WatermarkGui = Instance.new("ScreenGui")
+    WatermarkGui.Name = "VortexWatermarkModern"
+    WatermarkGui.Parent = (gethui and gethui()) or CoreGui
 
-        local Frame = Instance.new("Frame", Gui)
-        Frame.Size = size
-        Frame.Position = pos
-        Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
-        Frame.BackgroundTransparency = 0.25
-        Frame.BorderSizePixel = 0
+    local WmFrame = Instance.new("Frame", WatermarkGui)
+    WmFrame.Size = UDim2.new(0, 190, 0, 30)
+    WmFrame.Position = UDim2.new(0, 15, 0, 15)
+    WmFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+    WmFrame.BorderSizePixel = 0
+    Instance.new("UICorner", WmFrame).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIStroke", WmFrame).Color = Color3.fromRGB(45, 45, 60)
 
-        Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 8)
-        local Stroke = Instance.new("UIStroke", Frame)
-        Stroke.Color = Color3.fromRGB(255, 255, 255)
-        Stroke.Transparency = 0.88
-        Stroke.Thickness = 1
+    local WmText = Instance.new("TextLabel", WmFrame)
+    WmText.Size = UDim2.new(1, -20, 1, 0)
+    WmText.Position = UDim2.new(0, 10, 0, 0)
+    WmText.BackgroundTransparency = 1
+    WmText.Text = "VORTEX HUB  |  FPS: --"
+    WmText.TextColor3 = Color3.fromRGB(220, 220, 230)
+    WmText.Font = Enum.Font.GothamMedium
+    WmText.TextSize = 12
+    WmText.TextXAlignment = Enum.TextXAlignment.Left
 
-        -- Функция перетаскивания
-        local dragging, dragInput, dragStart, startPos
-        Frame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = Frame.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
-                end)
-            end
-        end)
-        Frame.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                dragInput = input
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and dragging then
-                local delta = input.Position - dragStart
-                Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end
-        end)
-
-        return Frame
-    end
-
-    -- ==================== FLUENT WATERMARK ====================
-    local WmFrame = CreateFluentWidget("VortexWatermark", UDim2.new(0, 210, 0, 30), UDim2.new(0, 20, 0, 20))
-
-    local WmTitle = Instance.new("TextLabel", WmFrame)
-    WmTitle.Size = UDim2.new(0, 110, 1, 0)
-    WmTitle.Position = UDim2.new(0, 10, 0, 0)
-    WmTitle.BackgroundTransparency = 1
-    WmTitle.Text = "VORTEX HUB"
-    WmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    WmTitle.Font = Enum.Font.GothamBold
-    WmTitle.TextSize = 12
-    WmTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-    local WmFPS = Instance.new("TextLabel", WmFrame)
-    WmFPS.Size = UDim2.new(0, 80, 1, 0)
-    WmFPS.Position = UDim2.new(1, -90, 0, 0)
-    WmFPS.BackgroundTransparency = 1
-    WmFPS.Text = "FPS: --"
-    WmFPS.TextColor3 = Color3.fromRGB(150, 150, 170)
-    WmFPS.Font = Enum.Font.GothamMedium
-    WmFPS.TextSize = 11
-    WmFPS.TextXAlignment = Enum.TextXAlignment.Right
-
-    -- ==================== FLUENT KEYBINDS UI ====================
-    local KbFrame = CreateFluentWidget("VortexKeybinds", UDim2.new(0, 180, 0, 32), UDim2.new(0, 20, 0, 60))
+    -- ==================== COMPACT KEYBINDS UI ====================
+    local KbFrame = Instance.new("Frame", WatermarkGui)
+    KbFrame.Size = UDim2.new(0, 170, 0, 32) 
+    KbFrame.Position = UDim2.new(0, 15, 0, 60) -- Под ватермаркой
+    KbFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+    KbFrame.BorderSizePixel = 0
     KbFrame.ClipsDescendants = true
+    Instance.new("UICorner", KbFrame).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIStroke", KbFrame).Color = Color3.fromRGB(45, 45, 60)
 
     local KbTitle = Instance.new("TextLabel", KbFrame)
-    KbTitle.Size = UDim2.new(1, -10, 0, 26)
-    KbTitle.Position = UDim2.new(0, 10, 0, 2)
+    KbTitle.Size = UDim2.new(1, -20, 0, 32)
+    KbTitle.Position = UDim2.new(0, 10, 0, 0)
     KbTitle.BackgroundTransparency = 1
     KbTitle.Text = "KEYBINDS"
-    KbTitle.TextColor3 = Color3.fromRGB(220, 220, 255)
+    KbTitle.TextColor3 = Color3.fromRGB(240, 240, 245)
     KbTitle.Font = Enum.Font.GothamBold
     KbTitle.TextSize = 11
     KbTitle.TextXAlignment = Enum.TextXAlignment.Left
 
     local Container = Instance.new("Frame", KbFrame)
-    Container.Size = UDim2.new(1, -16, 1, -30)
-    Container.Position = UDim2.new(0, 8, 0, 28)
+    Container.Size = UDim2.new(1, 0, 1, -32)
+    Container.Position = UDim2.new(0, 0, 0, 32)
     Container.BackgroundTransparency = 1
 
     local KbList = Instance.new("UIListLayout", Container)
     KbList.SortOrder = Enum.SortOrder.LayoutOrder
     KbList.Padding = UDim.new(0, 4)
 
-    local KeybindData = {} -- Хранит функции и их состояние бинда
+    Instance.new("UIPadding", Container).PaddingLeft = UDim.new(0, 10)
+    Instance.new("UIPadding", Container).PaddingRight = UDim.new(0, 10)
 
-    local function ResizeKbWindow()
+    -- Драггинг для окон
+    local function MakeDraggable(gui)
+        local dragging, dragStart, startPos
+        gui.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true; dragStart = input.Position; startPos = gui.Position
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local delta = input.Position - dragStart
+                gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+        end)
+    end
+    MakeDraggable(WmFrame)
+    MakeDraggable(KbFrame)
+
+    -- Динамическое управление биндами
+    local ActiveBinds = {}
+
+    local function FormatBindName(bind)
+        local str = tostring(bind)
+        return str:gsub("Enum.KeyCode.", ""):gsub("Enum.UserInputType.", "")
+    end
+
+    local function UpdateKeybindList()
         local count = 0
-        for _, d in pairs(KeybindData) do
-            if d.Bind and d.Bind ~= "NONE" and d.Bind ~= "Unknown" then
+        for _, item in pairs(ActiveBinds) do
+            local bindStr = FormatBindName(item.Bind)
+            if bindStr ~= "NONE" and bindStr ~= "Unknown" and bindStr ~= "" then
+                item.Frame.Visible = true
+                item.BindLbl.Text = "[" .. bindStr .. "]"
                 count = count + 1
-            end
-        end
-
-        local targetHeight = (count == 0) and 32 or (32 + (count * 22) + 6)
-        TweenService:Create(KbFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 180, 0, targetHeight)}):Play()
-    end
-
-    local function SetKeybindState(name, active, bindKey)
-        if not KeybindData[name] then
-            local Row = Instance.new("Frame", Container)
-            Row.Size = UDim2.new(1, 0, 0, 18)
-            Row.BackgroundTransparency = 1
-
-            local NameLbl = Instance.new("TextLabel", Row)
-            NameLbl.Size = UDim2.new(0.65, 0, 1, 0)
-            NameLbl.BackgroundTransparency = 1
-            NameLbl.Font = Enum.Font.GothamMedium
-            NameLbl.TextSize = 11
-            NameLbl.TextXAlignment = Enum.TextXAlignment.Left
-            NameLbl.Text = name
-
-            local BindLbl = Instance.new("TextLabel", Row)
-            BindLbl.Size = UDim2.new(0.35, 0, 1, 0)
-            BindLbl.Position = UDim2.new(0.65, 0, 0, 0)
-            BindLbl.BackgroundTransparency = 1
-            BindLbl.Font = Enum.Font.GothamBold
-            BindLbl.TextSize = 11
-            BindLbl.TextXAlignment = Enum.TextXAlignment.Right
-
-            KeybindData[name] = { Row = Row, NameLbl = NameLbl, BindLbl = BindLbl, Active = false, Bind = "NONE" }
-        end
-
-        local item = KeybindData[name]
-        if bindKey ~= nil then item.Bind = bindKey end
-        if active ~= nil then item.Active = active end
-
-        -- Если кнопка не привязана, скрываем строку
-        if item.Bind == "NONE" or item.Bind == "Unknown" or item.Bind == "" then
-            item.Row.Visible = false
-        else
-            item.Row.Visible = true
-            item.BindLbl.Text = "[" .. tostring(item.Bind) .. "]"
-            
-            if item.Active then
-                item.NameLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-                item.BindLbl.TextColor3 = Color3.fromRGB(140, 80, 255)
+                
+                if item.Active then
+                    item.NameLbl.TextColor3 = Color3.fromRGB(168, 85, 247) 
+                    item.BindLbl.TextColor3 = Color3.fromRGB(220, 220, 255)
+                else
+                    item.NameLbl.TextColor3 = Color3.fromRGB(100, 100, 110)
+                    item.BindLbl.TextColor3 = Color3.fromRGB(100, 100, 110)
+                end
             else
-                item.NameLbl.TextColor3 = Color3.fromRGB(110, 110, 130)
-                item.BindLbl.TextColor3 = Color3.fromRGB(90, 90, 110)
+                item.Frame.Visible = false
             end
         end
-
-        ResizeKbWindow()
+        
+        -- Плавно меняем размер окна
+        local targetHeight = count > 0 and (32 + (count * 18) + 8) or 32
+        TweenService:Create(KbFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 170, 0, targetHeight)}):Play()
     end
 
-    -- ==================== TABS SETUP ====================
+    local function SetKeybindState(name, bindText, isActive)
+        if not ActiveBinds[name] then
+            local ItemFrame = Instance.new("Frame", Container)
+            ItemFrame.Size = UDim2.new(1, 0, 0, 16)
+            ItemFrame.BackgroundTransparency = 1
+
+            local NameLabel = Instance.new("TextLabel", ItemFrame)
+            NameLabel.Size = UDim2.new(0.65, 0, 1, 0)
+            NameLabel.BackgroundTransparency = 1
+            NameLabel.Text = name
+            NameLabel.Font = Enum.Font.GothamMedium
+            NameLabel.TextSize = 11
+            NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+            local BindLabel = Instance.new("TextLabel", ItemFrame)
+            BindLabel.Size = UDim2.new(0.35, 0, 1, 0)
+            BindLabel.Position = UDim2.new(0.65, 0, 0, 0)
+            BindLabel.BackgroundTransparency = 1
+            BindLabel.Font = Enum.Font.Gotham
+            BindLabel.TextSize = 11
+            BindLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+            ActiveBinds[name] = { Frame = ItemFrame, NameLbl = NameLabel, BindLbl = BindLabel, Bind = "NONE", Active = false }
+        end
+        
+        if bindText ~= nil then ActiveBinds[name].Bind = bindText end
+        if isActive ~= nil then ActiveBinds[name].Active = isActive end
+        
+        UpdateKeybindList()
+    end
+
+    -- ==================== MENU & FEATURES ====================
     local Tabs = {
-        Combat = Window:AddTab({ Title = "Combat & Parry", Icon = "sword" }),
-        Visuals = Window:AddTab({ Title = "Visuals (ESP)", Icon = "eye" }),
-        Player = Window:AddTab({ Title = "Player & Mods", Icon = "user" }),
-        Automation = Window:AddTab({ Title = "Automation", Icon = "bot" }),
-        Settings = Window:AddTab({ Title = "Settings & Binds", Icon = "settings" })
+        Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
+        Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
+        Player = Window:AddTab({ Title = "Player", Icon = "user" })
     }
 
     local Features = {
         AutoDagger = false,
         ESP_Players = false,
-        ESP_KillerColor = Color3.fromRGB(255, 50, 50),
-        ESP_SurvivorColor = Color3.fromRGB(50, 255, 100),
+        ESP_KillerColor = Color3.fromRGB(239, 68, 68),
+        ESP_SurvivorColor = Color3.fromRGB(34, 197, 94),
         SpeedHack = false,
         SpeedValue = 16,
-        AutoSkillCheck = false,
         RiceHat = false,
         CartoonKillerCone = false
     }
 
     -- COMBAT
     local ToggleDagger = Tabs.Combat:AddToggle("AutoDagger", {Title = "Auto Dagger / Parry", Default = false})
-    ToggleDagger:OnChanged(function(Value)
-        Features.AutoDagger = Value
-        SetKeybindState("Auto Dagger", Value, nil)
+    ToggleDagger:OnChanged(function(Val)
+        Features.AutoDagger = Val
+        SetKeybindState("Auto Dagger", nil, Val)
     end)
-
     Tabs.Combat:AddKeybind("AutoDaggerKey", {
-        Title = "Auto Dagger Keybind",
-        Mode = "Toggle",
-        Default = "NONE",
-        Callback = function(Value, Bind)
-            ToggleDagger:SetValue(Value)
-            SetKeybindState("Auto Dagger", Value, tostring(Bind))
+        Title = "Auto Dagger Key", Mode = "Toggle", Default = "NONE",
+        Callback = function(Val, Bind)
+            ToggleDagger:SetValue(Val)
+        end,
+        ChangedCallback = function(NewBind)
+            SetKeybindState("Auto Dagger", NewBind, Features.AutoDagger)
         end
     })
 
     -- VISUALS
     local TogglePlayers = Tabs.Visuals:AddToggle("ESP_Players", {Title = "Player / Killer ESP", Default = false})
-    TogglePlayers:OnChanged(function(Value)
-        Features.ESP_Players = Value
-        SetKeybindState("ESP Players", Value, nil)
+    TogglePlayers:OnChanged(function(Val)
+        Features.ESP_Players = Val
+        SetKeybindState("Player ESP", nil, Val)
     end)
-
     Tabs.Visuals:AddKeybind("ESPKey", {
-        Title = "Toggle ESP Keybind",
-        Mode = "Toggle",
-        Default = "NONE",
-        Callback = function(Value, Bind)
-            TogglePlayers:SetValue(Value)
-            SetKeybindState("ESP Players", Value, tostring(Bind))
+        Title = "Toggle ESP Key", Mode = "Toggle", Default = "NONE",
+        Callback = function(Val)
+            TogglePlayers:SetValue(Val)
+        end,
+        ChangedCallback = function(NewBind)
+            SetKeybindState("Player ESP", NewBind, Features.ESP_Players)
         end
     })
 
     Tabs.Visuals:AddColorpicker("KillerColor", {
-        Title = "Killer ESP Color",
-        Default = Color3.fromRGB(255, 50, 50)
-    }):OnChanged(function(Value) Features.ESP_KillerColor = Value end)
+        Title = "Killer ESP Color", Default = Color3.fromRGB(239, 68, 68),
+        Callback = function(Val) Features.ESP_KillerColor = Val end
+    })
 
-    Tabs.Visuals:AddColorpicker("SurvivorColor", {
-        Title = "Survivor ESP Color",
-        Default = Color3.fromRGB(50, 255, 100)
-    }):OnChanged(function(Value) Features.ESP_SurvivorColor = Value end)
+    local ToggleHat = Tabs.Visuals:AddToggle("RiceHatToggle", {Title = "3D Chinese Hat", Default = false})
+    ToggleHat:OnChanged(function(Val) Features.RiceHat = Val end)
 
-    Tabs.Visuals:AddToggle("RiceHatToggle", {Title = "Chinese Rice Hat (3D)", Default = false}):OnChanged(function(Value)
-        Features.RiceHat = Value
-    end)
-
-    Tabs.Visuals:AddToggle("CartoonConeToggle", {Title = "Cartoon Killer Vision Lines", Default = false}):OnChanged(function(Value)
-        Features.CartoonKillerCone = Value
-    end)
+    local ToggleCartoonCone = Tabs.Visuals:AddToggle("CartoonConeToggle", {Title = "Cartoon Killer Vision Lines", Default = false})
+    ToggleCartoonCone:OnChanged(function(Val) Features.CartoonKillerCone = Val end)
 
     -- PLAYER
-    local ToggleSpeed = Tabs.Player:AddToggle("SpeedHack", {Title = "Enable Speed", Default = false})
-    ToggleSpeed:OnChanged(function(Value)
-        Features.SpeedHack = Value
-        SetKeybindState("SpeedHack", Value, nil)
+    local ToggleSpeed = Tabs.Player:AddToggle("SpeedHack", {Title = "SpeedHack", Default = false})
+    ToggleSpeed:OnChanged(function(Val)
+        Features.SpeedHack = Val
+        SetKeybindState("SpeedHack", nil, Val)
     end)
-
     Tabs.Player:AddKeybind("SpeedKey", {
-        Title = "Speed Keybind",
-        Mode = "Toggle",
-        Default = "NONE",
-        Callback = function(Value, Bind)
-            ToggleSpeed:SetValue(Value)
-            SetKeybindState("SpeedHack", Value, tostring(Bind))
+        Title = "Speed Key", Mode = "Toggle", Default = "NONE",
+        Callback = function(Val)
+            ToggleSpeed:SetValue(Val)
+        end,
+        ChangedCallback = function(NewBind)
+            SetKeybindState("SpeedHack", NewBind, Features.SpeedHack)
         end
     })
-
     Tabs.Player:AddSlider("SpeedValue", {
-        Title = "Speed Multiplier",
-        Default = 16, Min = 16, Max = 40, Rounding = 1,
-        Callback = function(Value) Features.SpeedValue = Value end
+        Title = "Speed Multiplier", Default = 16, Min = 16, Max = 40, Rounding = 1,
+        Callback = function(Val) Features.SpeedValue = Val end
     })
 
-    -- AUTOMATION
-    Tabs.Automation:AddToggle("AutoSkill", {Title = "Auto SkillCheck", Default = false}):OnChanged(function(Value)
-        Features.AutoSkillCheck = Value
+    -- ==================== VISUALS LOGIC (HAT & CONE) ====================
+    task.spawn(function()
+        while task.wait(0.5) do
+            -- 1. Китайская шляпа (Weld)
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") then
+                local char = LocalPlayer.Character
+                local head = char.Head
+                local existingHat = char:FindFirstChild("VortexRiceHat")
+
+                if Features.RiceHat then
+                    if not existingHat then
+                        local hat = Instance.new("Part")
+                        hat.Name = "VortexRiceHat"
+                        hat.Size = Vector3.new(2.5, 0.6, 2.5)
+                        hat.CanCollide = false
+                        hat.Massless = true
+                        hat.Color = Color3.fromRGB(140, 50, 255)
+                        hat.Material = Enum.Material.SmoothPlastic
+                        
+                        local mesh = Instance.new("SpecialMesh", hat)
+                        mesh.MeshType = Enum.MeshType.Cone
+                        mesh.Scale = Vector3.new(2.5, 0.6, 2.5)
+
+                        local weld = Instance.new("Weld", hat)
+                        weld.Part0 = head
+                        weld.Part1 = hat
+                        weld.C0 = CFrame.new(0, 0.7, 0) -- Ровно над головой
+                        
+                        hat.Parent = char
+                    end
+                else
+                    if existingHat then existingHat:Destroy() end
+                end
+            end
+
+            -- 2. Мультяшный конус убийцы (ConeHandleAdornment)
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                    local isKiller = p.Team and p.Team.Name:lower():find("killer")
+                    local head = p.Character.Head
+                    local existingCone = p.Character:FindFirstChild("VortexVisionCone")
+
+                    if Features.CartoonKillerCone and isKiller then
+                        if not existingCone then
+                            local cone = Instance.new("ConeHandleAdornment")
+                            cone.Name = "VortexVisionCone"
+                            cone.Adornee = head
+                            -- Направляем конус вперед по взгляду персонажа (вдоль -Z оси головы)
+                            cone.CFrame = CFrame.new(0, 0, -8) * CFrame.Angles(0, 0, 0)
+                            cone.Radius = 4
+                            cone.Height = 16
+                            cone.Color3 = Color3.fromRGB(255, 50, 50)
+                            cone.Transparency = 0.6
+                            cone.ZIndex = 1
+                            cone.Parent = p.Character
+                        end
+                    else
+                        if existingCone then existingCone:Destroy() end
+                    end
+                end
+            end
+        end
     end)
 
-    -- ==================== OPTIMIZED LOGIC ====================
-    
-    -- 1. Исправленная Китайская Шляпа (Chinese Rice Hat)
-    local function UpdateRiceHat()
-        local char = LocalPlayer.Character
-        if not char then return end
-        local head = char:FindFirstChild("Head")
-        if not head then return end
-
-        local existingHat = char:FindFirstChild("VortexRiceHat")
-        if Features.RiceHat then
-            if not existingHat then
-                local hat = Instance.new("Part")
-                hat.Name = "VortexRiceHat"
-                hat.Size = Vector3.new(2.6, 0.6, 2.6)
-                hat.CanCollide = false
-                hat.Massless = true
-                hat.Color = Color3.fromRGB(140, 50, 255)
-                hat.Material = Enum.Material.SmoothPlastic
-
-                local mesh = Instance.new("SpecialMesh", hat)
-                mesh.MeshType = Enum.MeshType.Cone
-                mesh.Scale = Vector3.new(2.6, 0.6, 2.6)
-
-                local weld = Instance.new("Weld", hat)
-                weld.Part0 = head
-                weld.Part1 = hat
-                weld.C0 = CFrame.new(0, 0.75, 0)
-                hat.Parent = char
-            end
-        else
-            if existingHat then existingHat:Destroy() end
-        end
-    end
-
-    -- 2. ESP Highlights
-    local ESP_Storage = {}
-    local function ApplyHighlight(inst, col)
-        if not inst then return end
-        local hl = ESP_Storage[inst]
+    -- ==================== RENDER LOOP (ESP & FPS) ====================
+    local ESP_Cache = {}
+    local function ApplyESP(inst, color)
+        local hl = ESP_Cache[inst]
         if not hl then
             hl = Instance.new("Highlight")
             hl.Name = "Vortex_ESP"
             hl.FillTransparency = 0.5
             hl.OutlineTransparency = 0
             hl.Parent = inst
-            ESP_Storage[inst] = hl
+            ESP_Cache[inst] = hl
         end
         hl.Adornee = inst
-        hl.FillColor = col
+        hl.FillColor = color
         hl.Enabled = true
     end
 
-    local function ClearHighlight(inst)
-        if ESP_Storage[inst] then ESP_Storage[inst].Enabled = false end
+    local function ClearESP(inst)
+        if ESP_Cache[inst] then ESP_Cache[inst].Enabled = false end
     end
 
-    -- 3. Cartoon Killer Vision Lines
-    local CartoonRings = {}
-    local function UpdateCartoonVision(killerChar)
-        if not Features.CartoonKillerCone or not killerChar then
-            for _, ring in pairs(CartoonRings) do ring.Visible = false end
-            return
-        end
-        local head = killerChar:FindFirstChild("Head")
-        if not head then return end
-
-        for i = 1, 2 do
-            local ring = CartoonRings[i]
-            if not ring then
-                ring = Instance.new("SelectionBox")
-                ring.Color3 = Color3.fromRGB(255, 120, 0)
-                ring.LineThickness = 0.04
-                ring.Parent = workspace
-                CartoonRings[i] = ring
-            end
-            ring.Adornee = head
-            ring.Visible = true
-        end
-    end
-
-    -- Render Loop
-    local lastFpsTime = os.clock()
-    local frameCount = 0
+    local lastTime = os.clock()
+    local frames = 0
 
     RunService.RenderStepped:Connect(function()
-        frameCount = frameCount + 1
+        frames = frames + 1
         local now = os.clock()
-        if now - lastFpsTime >= 1 then
-            WmFPS.Text = "FPS: " .. tostring(math.floor(frameCount / (now - lastFpsTime)))
-            frameCount = 0
-            lastFpsTime = now
+        if now - lastTime >= 1 then
+            WmText.Text = "VORTEX HUB  |  FPS: " .. frames
+            frames = 0
+            lastTime = now
         end
 
         if Features.SpeedHack and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -578,58 +530,29 @@ local function LoadMainVortexHub(usedKey, keyType)
                 if p ~= LocalPlayer and p.Character then
                     local isKiller = p.Team and p.Team.Name:lower():find("killer")
                     local col = isKiller and Features.ESP_KillerColor or Features.ESP_SurvivorColor
-                    ApplyHighlight(p.Character, col)
-
-                    if isKiller and Features.CartoonKillerCone then
-                        UpdateCartoonVision(p.Character)
-                    end
+                    ApplyESP(p.Character, col)
                 end
             end
         else
             for _, p in pairs(Players:GetPlayers()) do
-                if p.Character then ClearHighlight(p.Character) end
-            end
-            UpdateCartoonVision(nil)
-        end
-
-        UpdateRiceHat()
-    end)
-
-    -- Auto SkillCheck
-    task.spawn(function()
-        while task.wait(0.1) do
-            if Features.AutoSkillCheck then
-                local pGui = LocalPlayer:FindFirstChild("PlayerGui")
-                if pGui then
-                    for _, gui in pairs(pGui:GetChildren()) do
-                        if gui.Name:lower():find("skill") or gui.Name:lower():find("generator") then
-                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-                            task.wait(0.03)
-                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-                        end
-                    end
-                end
+                if p.Character then ClearESP(p.Character) end
             end
         end
     end)
-
-    SaveManager:SetLibrary(Fluent)
-    InterfaceManager:SetLibrary(Fluent)
-    SaveManager:IgnoreThemeSettings()
-    SaveManager:SetIgnoreIndexes({})
-    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-    SaveManager:BuildConfigSection(Tabs.Settings)
 
     Window:SelectTab(1)
-    Fluent:Notify({ Title = "Vortex Hub", Content = "Loaded Successfully!", Duration = 4 })
 end
 
 -- ====================================================================--
---                            INIT VORTEX                               --
+--                            STARTUP                                  --
 --===================================================================--
 
-ShowLoadingScreen(function()
-    VerifyKeyAccess(function(key, keyType)
+ShowLoadingScreen(function(key, keyType, autoLogged)
+    if autoLogged then
         LoadMainVortexHub(key, keyType)
-    end)
+    else
+        ShowKeySystem(function(validKey, validKeyType)
+            LoadMainVortexHub(validKey, validKeyType)
+        end)
+    end
 end)
