@@ -1,1025 +1,582 @@
---[[
-    Vortex Hub // Region of Violence (VD) - Clean Edition (Pre-AutoDagger)
-    Author: TWKS
-]]--
+--====================================================================--
+--                        VORTEX HUB - VIOLENCE DISTRICT               --
+--====================================================================--
 
+local TweenService = game:GetService("TweenService")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local HttpService = game:GetService("HttpService")
-local AnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local HWID = RbxAnalyticsService:GetClientId()
+local KeyFileName = "VortexHub_Key.json"
 
-local HWID = "UNKNOWN-PC"
-pcall(function() HWID = AnalyticsService:GetClientId() end)
+-- База данных ключей (Key Database)
+local KeyDatabase = {
+    ["admin2013"] = { type = "Admin", duration = 99999999 },
+    
+    -- 1 Day Keys
+    ["VTX-1D-8F92A"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-3K71P"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-9M24L"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-4X18Q"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-7Z85W"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-2N63R"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-5V91T"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-1B47Y"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-6H32U"] = { type = "1 Day Pass", duration = 86400 },
+    ["VTX-1D-0J59E"] = { type = "1 Day Pass", duration = 86400 },
 
-local function GetNetworkTime()
-    local success, result = pcall(function()
-        local response = game:HttpGet("http://worldtimeapi.org/api/timezone/Etc/UTC")
-        local data = HttpService:JSONDecode(response)
-        return data.unixtime
-    end)
-    if success and result then return result else return os.time() end
-end
-
-local ValidKeys = {
-    ["VORTEX-1D-01A9"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-02B4"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-03C7"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-04D2"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-05E8"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-06F1"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-07G5"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-08H9"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-09J3"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-1D-10K6"] = { Duration = 86400, BoundHWID = nil },
-    ["VORTEX-30D-A101"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-B202"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-C303"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-D404"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-E505"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-F606"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-G707"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-H808"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-J909"] = { Duration = 2592000, BoundHWID = nil },
-    ["VORTEX-30D-K010"] = { Duration = 2592000, BoundHWID = nil },
-    ["admin2013"] = { Duration = 999999999, BoundHWID = nil }
+    -- 30 Days Keys
+    ["VTX-30D-92KF8"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-17PQ3"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-84LW9"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-51XR2"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-36VT5"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-73MN1"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-28BZ4"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-69HC7"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-40UJ6"] = { type = "30 Days VIP", duration = 2592000 },
+    ["VTX-30D-15GE9"] = { type = "30 Days VIP", duration = 2592000 }
 }
 
-local PresetThemes = {
-    White = Color3.fromRGB(255, 255, 255),
-    Purple = Color3.fromRGB(170, 0, 255),
-    Cyan = Color3.fromRGB(0, 225, 255),
-    Green = Color3.fromRGB(0, 255, 120),
-    Red = Color3.fromRGB(255, 50, 50),
-    Orange = Color3.fromRGB(255, 150, 0),
-    Pink = Color3.fromRGB(255, 100, 200)
-}
-local AccentColor = PresetThemes.White
-
-local BgDark = Color3.fromRGB(15, 15, 18)
-local SidebarDark = Color3.fromRGB(22, 22, 26)
-local CardDark = Color3.fromRGB(28, 28, 34)
-local TextMain = Color3.fromRGB(255, 255, 255)
-local TextMuted = Color3.fromRGB(160, 160, 170)
-
-local oldGui = PlayerGui:FindFirstChild("VortexHubComplete")
-if oldGui then oldGui:Destroy() end
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexHubComplete"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = PlayerGui
-
--- LOADING SCREEN
-local LoadingFrame = Instance.new("Frame", ScreenGui)
-LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
-LoadingFrame.BackgroundColor3 = BgDark
-LoadingFrame.BorderSizePixel = 0
-LoadingFrame.ZIndex = 1000
-
-local LoadingBox = Instance.new("Frame", LoadingFrame)
-LoadingBox.Size = UDim2.new(0, 460, 0, 190)
-LoadingBox.Position = UDim2.new(0.5, -230, 0.5, -95)
-LoadingBox.BackgroundColor3 = SidebarDark
-LoadingBox.BorderSizePixel = 0
-Instance.new("UICorner", LoadingBox).CornerRadius = UDim.new(0, 10)
-
-local BoxGlow = Instance.new("UIStroke", LoadingBox)
-BoxGlow.Color = AccentColor
-BoxGlow.Thickness = 1.2
-BoxGlow.Transparency = 0.5
-
-local LoadingTitle = Instance.new("TextLabel", LoadingBox)
-LoadingTitle.Size = UDim2.new(1, 0, 0, 30)
-LoadingTitle.Position = UDim2.new(0, 0, 0, 28)
-LoadingTitle.BackgroundTransparency = 1
-LoadingTitle.Font = Enum.Font.GothamBold
-LoadingTitle.Text = "VORTEX ENGINE // COMPLETE"
-LoadingTitle.TextColor3 = AccentColor
-LoadingTitle.TextSize = 14
-
-local LoadingSub = Instance.new("TextLabel", LoadingBox)
-LoadingSub.Size = UDim2.new(1, 0, 0, 20)
-LoadingSub.Position = UDim2.new(0, 0, 0, 58)
-LoadingSub.BackgroundTransparency = 1
-LoadingSub.Font = Enum.Font.Code
-LoadingSub.Text = "INITIALIZING ALL FEATURES..."
-LoadingSub.TextColor3 = TextMuted
-LoadingSub.TextSize = 10
-
-local BarBg = Instance.new("Frame", LoadingBox)
-BarBg.Size = UDim2.new(0, 380, 0, 4)
-BarBg.Position = UDim2.new(0.5, -190, 0.78, 0)
-BarBg.BackgroundColor3 = CardDark
-BarBg.BorderSizePixel = 0
-Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
-
-local BarFill = Instance.new("Frame", BarBg)
-BarFill.Size = UDim2.new(0, 0, 1, 0)
-BarFill.BackgroundColor3 = AccentColor
-BarFill.BorderSizePixel = 0
-Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
-
-TweenService:Create(BarFill, TweenInfo.new(1.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-task.wait(1.3)
-LoadingFrame:Destroy()
-
--- KEY AUTHENTICATION WINDOW
-local KeyAuthGranted = false
-local KeyGui = Instance.new("Frame", ScreenGui)
-KeyGui.Size = UDim2.new(0, 420, 0, 250)
-KeyGui.Position = UDim2.new(0.5, -210, 0.5, -125)
-KeyGui.BackgroundColor3 = SidebarDark
-KeyGui.BorderSizePixel = 0
-KeyGui.ZIndex = 500
-Instance.new("UICorner", KeyGui).CornerRadius = UDim.new(0, 10)
-
-local KeyGlow = Instance.new("UIStroke", KeyGui)
-KeyGlow.Color = AccentColor
-KeyGlow.Thickness = 1.2
-KeyGlow.Transparency = 0.5
-
-local KeyTitle = Instance.new("TextLabel", KeyGui)
-KeyTitle.Size = UDim2.new(1, 0, 0, 35)
-KeyTitle.Position = UDim2.new(0, 0, 0, 20)
-KeyTitle.BackgroundTransparency = 1
-KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.Text = "VORTEX LICENSE SYSTEM"
-KeyTitle.TextColor3 = AccentColor
-KeyTitle.TextSize = 15
-
-local KeySub = Instance.new("TextLabel", KeyGui)
-KeySub.Size = UDim2.new(1, 0, 0, 20)
-KeySub.Position = UDim2.new(0, 0, 0, 52)
-KeySub.BackgroundTransparency = 1
-KeySub.Font = Enum.Font.Gotham
-KeySub.Text = "Hardware-locked security active on this PC"
-KeySub.TextColor3 = TextMuted
-KeySub.TextSize = 10
-
-local KeyBox = Instance.new("TextBox", KeyGui)
-KeyBox.Size = UDim2.new(0, 360, 0, 40)
-KeyBox.Position = UDim2.new(0.5, -180, 0, 90)
-KeyBox.BackgroundColor3 = CardDark
-KeyBox.BorderSizePixel = 0
-KeyBox.PlaceholderText = "Paste your license key here..."
-KeyBox.Text = ""
-KeyBox.TextColor3 = TextMain
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.TextSize = 12
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
-
-local SubmitBtn = Instance.new("TextButton", KeyGui)
-SubmitBtn.Size = UDim2.new(0, 360, 0, 40)
-SubmitBtn.Position = UDim2.new(0.5, -180, 0, 142)
-SubmitBtn.BackgroundColor3 = AccentColor
-SubmitBtn.BorderSizePixel = 0
-SubmitBtn.Font = Enum.Font.GothamBold
-SubmitBtn.Text = "VERIFY & LAUNCH"
-SubmitBtn.TextColor3 = Color3.fromRGB(15, 15, 18)
-SubmitBtn.TextSize = 12
-Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
-
-local KeyStatus = Instance.new("TextLabel", KeyGui)
-KeyStatus.Size = UDim2.new(1, 0, 0, 20)
-KeyStatus.Position = UDim2.new(0, 0, 0, 195)
-KeyStatus.BackgroundTransparency = 1
-KeyStatus.Font = Enum.Font.Gotham
-KeyStatus.Text = "Status: Waiting for license input..."
-KeyStatus.TextColor3 = TextMuted
-KeyStatus.TextSize = 10
-
-SubmitBtn.MouseButton1Click:Connect(function()
-    local inputKey = string.gsub(KeyBox.Text, "%s+", "")
-    local keyData = ValidKeys[inputKey]
-    
-    if keyData then
-        local currentNetworkTime = GetNetworkTime()
-        if keyData.BoundHWID == nil then
-            keyData.BoundHWID = HWID
-            keyData.ExpiresAt = currentNetworkTime + keyData.Duration
-        end
-        if keyData.BoundHWID ~= HWID then
-            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
-            KeyStatus.Text = "ACCESS DENIED: KEY BOUND TO ANOTHER PC"
-            return
-        end
-        if currentNetworkTime > keyData.ExpiresAt then
-            KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
-            KeyStatus.Text = "ACCESS DENIED: LICENSE EXPIRED"
-            return
-        end
-
-        KeyAuthGranted = true
-        KeyStatus.TextColor3 = Color3.fromRGB(0, 255, 120)
-        KeyStatus.Text = "AUTHENTICATION SUCCESSFUL!"
-        task.wait(0.4)
-        KeyGui:Destroy()
-    else
-        KeyStatus.TextColor3 = Color3.fromRGB(255, 60, 60)
-        KeyStatus.Text = "ACCESS DENIED: INVALID LICENSE KEY"
+-- Хранилище сохраненных данных
+local HttpService = game:GetService("HttpService")
+local function LoadSavedData()
+    if isfile and readfile and isfile(KeyFileName) then
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(readfile(KeyFileName))
+        end)
+        if success then return result end
     end
-end)
+    return nil
+end
 
-repeat task.wait(0.1) until KeyAuthGranted == true
-
--- Config
-local Config = {
-    AutoSkillCheck = true,
-    NoClip = false,
-    GodRevolver = false,
-    SpeedHack = false,
-    SpeedValue = 16,
-    FastRepair = false,
-    KillerAimbot = false,
-    Flowstate = false,
-    InfiniteFlashlight = false,
-
-    FullBright = false,
-    NoFog = false,
-    CustomTime = false,
-    TimeOfDay = 14,
-    CustomFOVEnabled = false,
-    FOVValue = 90,
-    PlayerESP = false,
-    KillerESP = false,
-    PalletESP = false,
-    GeneratorESP = false,
-    WindowESP = false,
-    TracersPlayers = false,
-    TracersKiller = false,
-    TriangleRingEnabled = false,
-    RingSize = 15,
-    RingColor = AccentColor,
-    VisualSpin = false,
-    SpinSpeed = 50,
-    Crosshair = false,
-    
-    PortalTeleport = false,
-    PortalKey = nil,
-    
-    KillerESPColor = Color3.fromRGB(180, 60, 60),
-    PlayerESPColor = Color3.fromRGB(255, 255, 255),
-    GeneratorESPColor = Color3.fromRGB(255, 255, 255),
-    PalletESPColor = Color3.fromRGB(200, 200, 200),
-    WindowESPColor = Color3.fromRGB(100, 200, 255)
-}
-
-local Cache = { Generators = {}, Pallets = {}, Windows = {}, ClosestKiller = nil, KillersList = {}, PlayersList = {} }
-local ActiveBindsUI = {}
-
-local Watermark = Instance.new("TextButton", ScreenGui)
-Watermark.Name = "Watermark"
-Watermark.Size = UDim2.new(0, 160, 0, 26)
-Watermark.Position = UDim2.new(0.02, 0, 0.02, 0)
-Watermark.BackgroundColor3 = SidebarDark
-Watermark.BorderSizePixel = 0
-Watermark.Font = Enum.Font.GothamBold
-Watermark.Text = "  vortex.cc  |  60 FPS"
-Watermark.TextColor3 = AccentColor
-Watermark.TextSize = 11
-Watermark.TextXAlignment = Enum.TextXAlignment.Left
-Instance.new("UICorner", Watermark).CornerRadius = UDim.new(0, 4)
-
-local WmStroke = Instance.new("UIStroke", Watermark)
-WmStroke.Color = AccentColor
-WmStroke.Thickness = 1
-WmStroke.Transparency = 0.5
-
-local dragging, dragStart, startPos
-Watermark.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true dragStart = input.Position startPos = Watermark.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        Watermark.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
-end)
-
-local fpsCount, lastUpdate = 0, tick()
-RunService.RenderStepped:Connect(function()
-    fpsCount = fpsCount + 1
-    if tick() - lastUpdate >= 1 then
-        Watermark.Text = "  vortex.cc  |  " .. tostring(fpsCount) .. " FPS"
-        fpsCount = 0 lastUpdate = tick()
-    end
-end)
-
-local MainMenu = Instance.new("Frame", ScreenGui)
-MainMenu.Name = "MainMenu"
-MainMenu.Size = UDim2.new(0, 680, 0, 420)
-MainMenu.Position = UDim2.new(0.5, -340, 0.5, -210)
-MainMenu.BackgroundColor3 = BgDark
-MainMenu.BorderSizePixel = 0
-MainMenu.Visible = false
-
-Instance.new("UICorner", MainMenu).CornerRadius = UDim.new(0, 8)
-local MenuStroke = Instance.new("UIStroke", MainMenu)
-MenuStroke.Color = Color3.fromRGB(50, 50, 60) MenuStroke.Thickness = 1
-
-Watermark.MouseButton1Click:Connect(function() MainMenu.Visible = not MainMenu.Visible end)
-
-local Sidebar = Instance.new("Frame", MainMenu)
-Sidebar.Size = UDim2.new(0, 150, 1, 0)
-Sidebar.BackgroundColor3 = SidebarDark
-Sidebar.BorderSizePixel = 0
-Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
-
-local Logo = Instance.new("TextLabel", Sidebar)
-Logo.Size = UDim2.new(1, -20, 0, 40)
-Logo.Position = UDim2.new(0, 15, 0, 12)
-Logo.BackgroundTransparency = 1
-Logo.Font = Enum.Font.GothamBold
-Logo.Text = "• vortex.cc"
-Logo.TextColor3 = AccentColor
-Logo.TextSize = 14
-Logo.TextXAlignment = Enum.TextXAlignment.Left
-
-local TabContainer = Instance.new("Frame", Sidebar)
-TabContainer.Size = UDim2.new(1, 0, 1, -120)
-TabContainer.Position = UDim2.new(0, 0, 0, 60)
-TabContainer.BackgroundTransparency = 1
-
-local TabListLayout = Instance.new("UIListLayout", TabContainer)
-TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabListLayout.Padding = UDim.new(0, 4)
-
-local UserProfile = Instance.new("Frame", Sidebar)
-UserProfile.Size = UDim2.new(1, -16, 0, 45)
-UserProfile.Position = UDim2.new(0, 8, 1, -55)
-UserProfile.BackgroundColor3 = CardDark
-UserProfile.BorderSizePixel = 0
-Instance.new("UICorner", UserProfile).CornerRadius = UDim.new(0, 6)
-
-local UserName = Instance.new("TextLabel", UserProfile)
-UserName.Size = UDim2.new(1, -12, 0, 16)
-UserName.Position = UDim2.new(0, 8, 0, 7)
-UserName.BackgroundTransparency = 1
-UserName.Font = Enum.Font.GothamBold
-UserName.Text = LocalPlayer.Name
-UserName.TextColor3 = TextMain
-UserName.TextSize = 11
-UserName.TextXAlignment = Enum.TextXAlignment.Left
-
-local UserRole = Instance.new("TextLabel", UserProfile)
-UserRole.Size = UDim2.new(1, -12, 0, 14)
-UserRole.Position = UDim2.new(0, 8, 0, 22)
-UserRole.BackgroundTransparency = 1
-UserRole.Font = Enum.Font.Gotham
-UserRole.Text = "VIP Member"
-UserRole.TextColor3 = TextMuted
-UserRole.TextSize = 9
-UserRole.TextXAlignment = Enum.TextXAlignment.Left
-
-local ContentArea = Instance.new("Frame", MainMenu)
-ContentArea.Size = UDim2.new(1, -165, 1, -15)
-ContentArea.Position = UDim2.new(0, 155, 0, 10)
-ContentArea.BackgroundTransparency = 1
-
-local KeybindsDisplay = Instance.new("Frame", ScreenGui)
-KeybindsDisplay.Name = "VortexKeybindsList"
-KeybindsDisplay.Size = UDim2.new(0, 160, 0, 150)
-KeybindsDisplay.Position = UDim2.new(0.02, 0, 0.25, 0)
-KeybindsDisplay.BackgroundColor3 = SidebarDark
-KeybindsDisplay.BorderSizePixel = 0
-KeybindsDisplay.Visible = false
-Instance.new("UICorner", KeybindsDisplay).CornerRadius = UDim.new(0, 6)
-
-local KbStroke = Instance.new("UIStroke", KeybindsDisplay)
-KbStroke.Color = AccentColor
-KbStroke.Thickness = 1
-KbStroke.Transparency = 0.5
-
-local KbHeader = Instance.new("TextLabel", KeybindsDisplay)
-KbHeader.Size = UDim2.new(1, 0, 0, 25)
-KbHeader.BackgroundTransparency = 1
-KbHeader.Font = Enum.Font.GothamBold
-KbHeader.Text = "  Keybinds"
-KbHeader.TextColor3 = AccentColor
-KbHeader.TextSize = 11
-KbHeader.TextXAlignment = Enum.TextXAlignment.Left
-
-local KbContainer = Instance.new("Frame", KeybindsDisplay)
-KbContainer.Size = UDim2.new(1, 0, 1, -25)
-KbContainer.Position = UDim2.new(0, 0, 0, 25)
-KbContainer.BackgroundTransparency = 1
-local KbLayout = Instance.new("UIListLayout", KbContainer)
-KbLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-local function UpdateKeybindsUI(name, keyName, hasKey)
-    local label = ActiveBindsUI[name]
-    if hasKey and keyName ~= "" then
-        if not label then
-            label = Instance.new("TextLabel", KbContainer)
-            label.Size = UDim2.new(1, 0, 0, 18)
-            label.BackgroundTransparency = 1
-            label.Font = Enum.Font.Gotham
-            label.TextColor3 = Color3.fromRGB(130, 130, 140)
-            label.TextSize = 10
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            ActiveBindsUI[name] = label
-        end
-        label.Text = "  [ " .. keyName .. " ] " .. name
-    else
-        if label then
-            label:Destroy()
-            ActiveBindsUI[name] = nil
-        end
+local function SaveData(key, hwid, activationTime)
+    if writefile then
+        local data = { Key = key, HWID = hwid, ActivatedAt = activationTime }
+        writefile(KeyFileName, HttpService:JSONEncode(data))
     end
 end
 
-local ThemeObjects = {}
-local function RegisterThemeObject(obj, prop)
-    table.insert(ThemeObjects, {Object = obj, Property = prop}) obj[prop] = AccentColor
-end
+-- ====================================================================--
+--                       LOADING SCREEN UI                            --
+--===================================================================--
 
-local ActiveTabButton = nil
-local function ApplyTheme(newColor)
-    AccentColor = newColor
-    Config.RingColor = newColor
-    WmStroke.Color = newColor
-    Watermark.TextColor3 = newColor
-    Logo.TextColor3 = newColor
-    KbStroke.Color = newColor
-    KbHeader.TextColor3 = newColor
-    if ActiveTabButton then
-        ActiveTabButton.BackgroundColor3 = newColor
-        ActiveTabButton.TextColor3 = (newColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or TextMain
-    end
-    for _, item in ipairs(ThemeObjects) do
-        if item.Object and item.Object.Parent then item.Object[item.Property] = newColor end
-    end
-end
+local function ShowLoadingScreen(callback)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "VortexLoadingUI"
+    ScreenGui.Parent = (gethui and gethui()) or CoreGui
 
-local Tabs, Pages = {}, {}
-local function CreateTab(name, layoutOrder)
-    local TabBtn = Instance.new("TextButton", TabContainer)
-    TabBtn.Size = UDim2.new(1, -16, 0, 32)
-    TabBtn.Position = UDim2.new(0, 8, 0, 0)
-    TabBtn.BackgroundColor3 = SidebarDark
-    TabBtn.BorderSizePixel = 0
-    TabBtn.Font = Enum.Font.GothamBold
-    TabBtn.Text = "  " .. name
-    TabBtn.TextColor3 = TextMuted
-    TabBtn.TextSize = 11
-    TabBtn.TextXAlignment = Enum.TextXAlignment.Left
-    TabBtn.LayoutOrder = layoutOrder
-    Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 380, 0, 220)
+    MainFrame.Position = UDim2.new(0.5, -190, 0.5, -110)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
 
-    local Page = Instance.new("Frame", ContentArea)
-    Page.Size = UDim2.new(1, 0, 1, 0)
-    Page.BackgroundTransparency = 1
-    Page.Visible = false
+    local UICorner = Instance.new("UICorner", MainFrame)
+    UICorner.CornerRadius = UDim.new(0, 12)
 
-    local LeftColumn = Instance.new("ScrollingFrame", Page)
-    LeftColumn.Name = "LeftColumn" LeftColumn.Size = UDim2.new(0.49, 0, 1, 0)
-    LeftColumn.BackgroundTransparency = 1 LeftColumn.ScrollBarThickness = 0
-    local LList = Instance.new("UIListLayout", LeftColumn) LList.Padding = UDim.new(0, 10) LList.SortOrder = Enum.SortOrder.LayoutOrder
+    local UIStroke = Instance.new("UIStroke", MainFrame)
+    UIStroke.Color = Color3.fromRGB(120, 40, 250)
+    UIStroke.Thickness = 2
 
-    local RightColumn = Instance.new("ScrollingFrame", Page)
-    RightColumn.Name = "RightColumn" RightColumn.Size = UDim2.new(0.49, 0, 1, 0)
-    RightColumn.Position = UDim2.new(0.51, 0, 0, 0) RightColumn.BackgroundTransparency = 1 RightColumn.ScrollBarThickness = 0
-    local RList = Instance.new("UIListLayout", RightColumn) RList.Padding = UDim.new(0, 10) RList.SortOrder = Enum.SortOrder.LayoutOrder
+    local Title = Instance.new("TextLabel", MainFrame)
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.Position = UDim2.new(0, 0, 0, 20)
+    Title.Text = "VORTEX HUB"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 26
+    Title.Font = Enum.Font.GothamBold
+    Title.BackgroundTransparency = 1
 
-    TabBtn.MouseButton1Click:Connect(function()
-        for _, p in pairs(Pages) do p.Visible = false end
-        for _, b in pairs(Tabs) do b.TextColor3 = TextMuted b.BackgroundColor3 = SidebarDark end
-        TabBtn.TextColor3 = (AccentColor == Color3.fromRGB(255, 255, 255)) and Color3.fromRGB(15, 15, 18) or TextMain
-        TabBtn.BackgroundColor3 = AccentColor
-        ActiveTabButton = TabBtn
-        Page.Visible = true
+    local SubTitle = Instance.new("TextLabel", MainFrame)
+    SubTitle.Size = UDim2.new(1, 0, 0, 20)
+    SubTitle.Position = UDim2.new(0, 0, 0, 55)
+    SubTitle.Text = "Violence District Edition"
+    SubTitle.TextColor3 = Color3.fromRGB(160, 160, 200)
+    SubTitle.TextSize = 14
+    SubTitle.Font = Enum.Font.Gotham
+    SubTitle.BackgroundTransparency = 1
+
+    local Status = Instance.new("TextLabel", MainFrame)
+    Status.Size = UDim2.new(1, 0, 0, 20)
+    Status.Position = UDim2.new(0, 0, 0, 110)
+    Status.Text = "Initializing Vortex System..."
+    Status.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Status.TextSize = 13
+    Status.Font = Enum.Font.GothamMedium
+    Status.BackgroundTransparency = 1
+
+    local BarBackground = Instance.new("Frame", MainFrame)
+    BarBackground.Size = UDim2.new(0.8, 0, 0, 8)
+    BarBackground.Position = UDim2.new(0.1, 0, 0, 145)
+    BarBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    BarBackground.BorderSizePixel = 0
+
+    local BarCorner = Instance.new("UICorner", BarBackground)
+    BarCorner.CornerRadius = UDim.new(1, 0)
+
+    local BarFill = Instance.new("Frame", BarBackground)
+    BarFill.Size = UDim2.new(0, 0, 1, 0)
+    BarFill.BackgroundColor3 = Color3.fromRGB(140, 50, 255)
+    BarFill.BorderSizePixel = 0
+
+    local FillCorner = Instance.new("UICorner", BarFill)
+    FillCorner.CornerRadius = UDim.new(1, 0)
+
+    task.spawn(function()
+        local stages = {
+            { p = 0.3, t = "Bypassing Security..." },
+            { p = 0.6, t = "Verifying HWID & License..." },
+            { p = 0.9, t = "Injecting Modules..." },
+            { p = 1.0, t = "Ready!" }
+        }
+
+        for _, stage in ipairs(stages) do
+            Status.Text = stage.t
+            TweenService:Create(BarFill, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {Size = UDim2.new(stage.p, 0, 1, 0)}):Play()
+            task.wait(0.7)
+        end
+
+        task.wait(0.3)
+        ScreenGui:Destroy()
+        callback()
     end)
-
-    table.insert(Tabs, TabBtn) table.insert(Pages, Page)
-    return LeftColumn, RightColumn, TabBtn
 end
 
-local function CreateCard(parent, title)
-    local Card = Instance.new("Frame", parent)
-    Card.Size = UDim2.new(1, -5, 0, 30) Card.BackgroundColor3 = CardDark Card.BorderSizePixel = 0
-    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
-    local CardList = Instance.new("UIListLayout", Card) CardList.SortOrder = Enum.SortOrder.LayoutOrder CardList.Padding = UDim.new(0, 6)
-    local Header = Instance.new("TextLabel", Card)
-    Header.Size = UDim2.new(1, -20, 0, 25) Header.Position = UDim2.new(0, 10, 0, 0) Header.BackgroundTransparency = 1
-    Header.Font = Enum.Font.GothamBold Header.Text = title Header.TextColor3 = TextMain Header.TextSize = 11 Header.TextXAlignment = Enum.TextXAlignment.Left
-    local Padding = Instance.new("UIPadding", Card)
-    Padding.PaddingTop = UDim.new(0, 10) Padding.PaddingBottom = UDim.new(0, 10) Padding.PaddingLeft = UDim.new(0, 10) Padding.PaddingRight = UDim.new(0, 10)
-    CardList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Card.Size = UDim2.new(1, -5, 0, CardList.AbsoluteContentSize.Y + 20)
-    end)
-    return Card
-end
+-- ====================================================================--
+--                         KEY SYSTEM GUI                             --
+--===================================================================--
 
-local function CreateToggle(card, text, default, callback)
-    local Toggle = Instance.new("Frame", card) Toggle.Size = UDim2.new(1, 0, 0, 22) Toggle.BackgroundTransparency = 1
-    
-    local ClickZone = Instance.new("TextButton", Toggle)
-    ClickZone.Size = UDim2.new(1, 0, 1, 0) ClickZone.BackgroundTransparency = 1 ClickZone.Text = "" ClickZone.ZIndex = 2
+local function VerifyKeyAccess(onSuccess)
+    local savedData = LoadSavedData()
+    local currentTime = os.time()
 
-    local Label = Instance.new("TextLabel", Toggle)
-    Label.Size = UDim2.new(0.65, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
-    Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
-
-    local BindLabel = Instance.new("TextLabel", Toggle)
-    BindLabel.Size = UDim2.new(0, 50, 1, 0) BindLabel.Position = UDim2.new(1, -70, 0, 0)
-    BindLabel.BackgroundTransparency = 1 BindLabel.Font = Enum.Font.Gotham
-    BindLabel.Text = "[None]" BindLabel.TextColor3 = TextMuted BindLabel.TextTransparency = 0.5
-    BindLabel.TextSize = 10 BindLabel.TextXAlignment = Enum.TextXAlignment.Right
-
-    local Switch = Instance.new("Frame", Toggle)
-    Switch.Size = UDim2.new(0, 14, 0, 14) Switch.Position = UDim2.new(1, -14, 0.5, -7)
-    Switch.BackgroundColor3 = default and AccentColor or Color3.fromRGB(45, 45, 55) Switch.BorderSizePixel = 0
-    Instance.new("UICorner", Switch).CornerRadius = UDim.new(0, 3)
-
-    if default then RegisterThemeObject(Switch, "BackgroundColor3") end
-
-    local state = default
-    local assignedKey = nil
-    local isBinding = false
-
-    local function ApplyState(newState)
-        if state == newState then return end
-        state = newState
-        Switch.BackgroundColor3 = state and AccentColor or Color3.fromRGB(45, 45, 55)
-        if state then RegisterThemeObject(Switch, "BackgroundColor3") end
-        callback(state)
-    end
-
-    ClickZone.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            if not isBinding then
-                ApplyState(not state)
-            end
-        elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
-            isBinding = true
-            BindLabel.Text = "[...]"
-            
-            local connection
-            connection = UserInputService.InputBegan:Connect(function(keyInput)
-                if keyInput.UserInputType == Enum.UserInputType.Keyboard then
-                    local key = keyInput.KeyCode
-                    if key == Enum.KeyCode.Backspace or key == Enum.KeyCode.Escape then
-                        assignedKey = nil
-                        BindLabel.Text = "[None]"
-                        UpdateKeybindsUI(text, "", false)
-                        if text == "Portal Teleport" then Config.PortalKey = nil end
-                    else
-                        assignedKey = key
-                        BindLabel.Text = "[" .. key.Name .. "]"
-                        UpdateKeybindsUI(text, key.Name, true)
-                        if text == "Portal Teleport" then Config.PortalKey = key end
-                    end
-                    isBinding = false
-                    connection:Disconnect()
+    if savedData and savedData.Key and savedData.HWID and savedData.ActivatedAt then
+        if savedData.HWID == HWID then
+            local keyInfo = KeyDatabase[savedData.Key]
+            if keyInfo then
+                local elapsed = currentTime - savedData.ActivatedAt
+                if elapsed < keyInfo.duration then
+                    onSuccess(savedData.Key, keyInfo.type)
+                    return
                 end
-            end)
+            end
         end
-    end)
+    end
 
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe or not assignedKey or isBinding then return end
-        if input.KeyCode == assignedKey then
-            ApplyState(not state)
+    local KeyGui = Instance.new("ScreenGui")
+    KeyGui.Name = "VortexKeySystem"
+    KeyGui.Parent = (gethui and gethui()) or CoreGui
+
+    local Frame = Instance.new("Frame", KeyGui)
+    Frame.Size = UDim2.new(0, 360, 0, 240)
+    Frame.Position = UDim2.new(0.5, -180, 0.5, -120)
+    Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+    Frame.BorderSizePixel = 0
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", Frame)
+    Stroke.Color = Color3.fromRGB(140, 50, 255)
+    Stroke.Thickness = 1.5
+
+    local Title = Instance.new("TextLabel", Frame)
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.Position = UDim2.new(0, 0, 0, 15)
+    Title.Text = "VORTEX KEY SYSTEM"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 20
+    Title.Font = Enum.Font.GothamBold
+    Title.BackgroundTransparency = 1
+
+    local Sub = Instance.new("TextLabel", Frame)
+    Sub.Size = UDim2.new(1, -40, 0, 30)
+    Sub.Position = UDim2.new(0, 20, 0, 50)
+    Sub.Text = "Enter your license key below to unlock Vortex Hub."
+    Sub.TextColor3 = Color3.fromRGB(160, 160, 180)
+    Sub.TextSize = 12
+    Sub.TextWrapped = true
+    Sub.Font = Enum.Font.Gotham
+    Sub.BackgroundTransparency = 1
+
+    local TextBox = Instance.new("TextBox", Frame)
+    TextBox.Size = UDim2.new(0.8, 0, 0, 38)
+    TextBox.Position = UDim2.new(0.1, 0, 0, 95)
+    TextBox.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
+    TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextBox.PlaceholderText = "Paste Key Here..."
+    TextBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 120)
+    TextBox.Text = ""
+    TextBox.Font = Enum.Font.GothamMedium
+    TextBox.TextSize = 14
+    Instance.new("UICorner", TextBox).CornerRadius = UDim.new(0, 6)
+
+    local SubmitBtn = Instance.new("TextButton", Frame)
+    SubmitBtn.Size = UDim2.new(0.8, 0, 0, 38)
+    SubmitBtn.Position = UDim2.new(0.1, 0, 0, 150)
+    SubmitBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 240)
+    SubmitBtn.Text = "SUBMIT KEY"
+    SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SubmitBtn.Font = Enum.Font.GothamBold
+    SubmitBtn.TextSize = 14
+    Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+
+    local StatusLabel = Instance.new("TextLabel", Frame)
+    StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+    StatusLabel.Position = UDim2.new(0, 0, 0, 200)
+    StatusLabel.Text = ""
+    StatusLabel.TextSize = 12
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.BackgroundTransparency = 1
+
+    SubmitBtn.MouseButton1Click:Connect(function()
+        local inputKey = TextBox.Text:gsub("%s+", "")
+        local keyData = KeyDatabase[inputKey]
+
+        if keyData then
+            SaveData(inputKey, HWID, os.time())
+            StatusLabel.TextColor3 = Color3.fromRGB(50, 255, 120)
+            StatusLabel.Text = "Access Granted! Loading Vortex..."
+            task.wait(1)
+            KeyGui:Destroy()
+            onSuccess(inputKey, keyData.type)
+        else
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+            StatusLabel.Text = "Invalid or Expired License Key!"
         end
     end)
 end
 
-local function CreateColorPicker(card, text, currentColor, callback)
-    local CpFrame = Instance.new("Frame", card) CpFrame.Size = UDim2.new(1, 0, 0, 22) CpFrame.BackgroundTransparency = 1
-    
-    local Label = Instance.new("TextLabel", CpFrame)
-    Label.Size = UDim2.new(0.7, 0, 1, 0) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
-    Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
+-- ====================================================================--
+--                     MAIN VORTEX HUB INTERFACE                       --
+--===================================================================--
 
-    local ColorBtn = Instance.new("TextButton", CpFrame)
-    ColorBtn.Size = UDim2.new(0, 30, 0, 14) ColorBtn.Position = UDim2.new(1, -30, 0.5, -7)
-    ColorBtn.BackgroundColor3 = currentColor ColorBtn.BorderSizePixel = 0 ColorBtn.Text = ""
-    Instance.new("UICorner", ColorBtn).CornerRadius = UDim.new(0, 3)
+local function LoadMainVortexHub(usedKey, keyType)
+    local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+    local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+    local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-    local PickerPopup = Instance.new("Frame", ScreenGui)
-    PickerPopup.Size = UDim2.new(0, 130, 0, 95)
-    PickerPopup.BackgroundColor3 = SidebarDark
-    PickerPopup.BorderSizePixel = 0
-    PickerPopup.Visible = false
-    PickerPopup.ZIndex = 600
-    Instance.new("UICorner", PickerPopup).CornerRadius = UDim.new(0, 6)
-    local PopStroke = Instance.new("UIStroke", PickerPopup) PopStroke.Color = AccentColor PopStroke.Thickness = 1
+    local Window = Fluent:CreateWindow({
+        Title = "VORTEX HUB | Violence District",
+        SubTitle = "License: " .. keyType,
+        TabWidth = 160,
+        Size = UDim2.fromOffset(580, 460),
+        Acrylic = true,
+        Theme = "Dark",
+        MinimizeKey = Enum.KeyCode.RightControl
+    })
 
-    local pLayout = Instance.new("UIGridLayout", PickerPopup)
-    pLayout.CellSize = UDim2.new(0, 34, 0, 20) pLayout.CellPadding = UDim2.new(0, 6, 0, 6)
-    pLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    -- ==================== WATERMARK WITH FPS ====================
+    local WatermarkGui = Instance.new("ScreenGui")
+    WatermarkGui.Name = "VortexWatermarkGui"
+    WatermarkGui.Parent = (gethui and gethui()) or CoreGui
 
-    local pPadding = Instance.new("UIPadding", PickerPopup)
-    pPadding.PaddingTop = UDim.new(0, 10) pPadding.PaddingLeft = UDim.new(0, 10)
+    local WatermarkBtn = Instance.new("TextButton", WatermarkGui)
+    WatermarkBtn.Size = UDim2.new(0, 190, 0, 32)
+    WatermarkBtn.Position = UDim2.new(0, 20, 0, 20)
+    WatermarkBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+    WatermarkBtn.BorderSizePixel = 0
+    WatermarkBtn.AutoButtonColor = true
+    WatermarkBtn.Text = ""
 
-    local colors = {
-        Color3.fromRGB(255, 50, 50),
-        Color3.fromRGB(0, 255, 120),
-        Color3.fromRGB(0, 225, 255),
-        Color3.fromRGB(170, 0, 255),
-        Color3.fromRGB(255, 255, 255),
-        Color3.fromRGB(255, 150, 0)
+    Instance.new("UICorner", WatermarkBtn).CornerRadius = UDim.new(0, 8)
+    local WmStroke = Instance.new("UIStroke", WatermarkBtn)
+    WmStroke.Color = Color3.fromRGB(140, 50, 255)
+    WmStroke.Thickness = 1.5
+
+    local WatermarkText = Instance.new("TextLabel", WatermarkBtn)
+    WatermarkText.Size = UDim2.new(1, 0, 1, 0)
+    WatermarkText.BackgroundTransparency = 1
+    WatermarkText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    WatermarkText.TextSize = 13
+    WatermarkText.Font = Enum.Font.GothamBold
+    WatermarkText.Text = "Vortex Hub | FPS: --"
+
+    -- FPS Counter Logic
+    task.spawn(function()
+        local lastTime = os.clock()
+        local frameCount = 0
+        RunService.RenderStepped:Connect(function()
+            frameCount = frameCount + 1
+            local currentTime = os.clock()
+            if currentTime - lastTime >= 1 then
+                local fps = math.floor(frameCount / (currentTime - lastTime))
+                WatermarkText.Text = "Vortex Hub | FPS: " .. tostring(fps)
+                frameCount = 0
+                lastTime = currentTime
+            end
+        end)
+    end)
+
+    -- Toggle UI Window on Watermark Click
+    WatermarkBtn.MouseButton1Click:Connect(function()
+        if Window then
+            Window:Minimize()
+        end
+    end)
+
+    -- ==================== TABS SETUP ====================
+    local Tabs = {
+        Combat = Window:AddTab({ Title = "Combat & Parry", Icon = "sword" }),
+        Visuals = Window:AddTab({ Title = "Visuals (ESP)", Icon = "eye" }),
+        Player = Window:AddTab({ Title = "Player & Mods", Icon = "user" }),
+        Automation = Window:AddTab({ Title = "Automation", Icon = "bot" }),
+        Settings = Window:AddTab({ Title = "Settings & Binds", Icon = "settings" })
     }
 
-    for _, col in ipairs(colors) do
-        local cBtn = Instance.new("TextButton", PickerPopup)
-        cBtn.BackgroundColor3 = col cBtn.BorderSizePixel = 0 cBtn.Text = ""
-        Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 4)
-        cBtn.MouseButton1Click:Connect(function()
-            ColorBtn.BackgroundColor3 = col
-            PickerPopup.Visible = false
-            callback(col)
-        end)
-    end
+    local ESP_Storage = {}
+    local Features = {
+        AutoDagger = false,
+        DaggerDistance = 12,
+        ESP_Players = false,
+        ESP_Generators = false,
+        ESP_Spikes = false,
+        SpeedHack = false,
+        SpeedValue = 16,
+        AutoSkillCheck = false,
+        Fullbright = false
+    }
 
-    ColorBtn.MouseButton1Click:Connect(function()
-        PickerPopup.Position = UDim2.new(0, ColorBtn.AbsolutePosition.X - 50, 0, ColorBtn.AbsolutePosition.Y + 20)
-        PickerPopup.Visible = not PickerPopup.Visible
-    end)
-end
-
-local function CreateSlider(card, text, min, max, default, callback)
-    local Slider = Instance.new("Frame", card) Slider.Size = UDim2.new(1, 0, 0, 30) Slider.BackgroundTransparency = 1
-    local Label = Instance.new("TextLabel", Slider)
-    Label.Size = UDim2.new(0.6, 0, 0, 14) Label.BackgroundTransparency = 1 Label.Font = Enum.Font.Gotham
-    Label.Text = text Label.TextColor3 = TextMuted Label.TextSize = 10 Label.TextXAlignment = Enum.TextXAlignment.Left
-    local ValLabel = Instance.new("TextLabel", Slider)
-    ValLabel.Size = UDim2.new(0.4, 0, 0, 14) ValLabel.Position = UDim2.new(0.6, 0, 0, 0) ValLabel.BackgroundTransparency = 1
-    ValLabel.Font = Enum.Font.GothamBold ValLabel.Text = tostring(default) ValLabel.TextColor3 = AccentColor ValLabel.TextSize = 10 ValLabel.TextXAlignment = Enum.TextXAlignment.Right
-    RegisterThemeObject(ValLabel, "TextColor3")
-    local SliderBg = Instance.new("Frame", Slider)
-    SliderBg.Size = UDim2.new(1, 0, 0, 4) SliderBg.Position = UDim2.new(0, 0, 0, 20) SliderBg.BackgroundColor3 = Color3.fromRGB(45, 45, 55) SliderBg.BorderSizePixel = 0
-    Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
-    local SliderFill = Instance.new("Frame", SliderBg)
-    SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0) SliderFill.BackgroundColor3 = AccentColor SliderFill.BorderSizePixel = 0
-    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
-    RegisterThemeObject(SliderFill, "BackgroundColor3")
-    local draggingSlider = false
-    SliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = false end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
-            local value = math.floor(min + ((max - min) * pos))
-            SliderFill.Size = UDim2.new(pos, 0, 1, 0) ValLabel.Text = tostring(value) callback(value)
-        end
-    end)
-end
-
-local function CreateButton(card, text, callback)
-    local Btn = Instance.new("TextButton", card)
-    Btn.Size = UDim2.new(1, 0, 0, 28) Btn.BackgroundColor3 = Color3.fromRGB(35, 40, 50) Btn.BorderSizePixel = 0
-    Btn.Font = Enum.Font.GothamBold Btn.Text = text Btn.TextColor3 = TextMain Btn.TextSize = 10
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
-    Btn.MouseButton1Click:Connect(callback)
-end
-
-local MainL, MainR, MainTabBtn = CreateTab("Main", 1)
-local VisualsL, VisualsR, VisualsTabBtn = CreateTab("Visuals", 2)
-local BindsL, BindsR, BindsTabBtn = CreateTab("Binds", 3)
-local ThemesL, ThemesR, ThemesTabBtn = CreateTab("Themes", 4)
-
-local SurvivorCard = CreateCard(MainL, "Survivor Side")
-CreateToggle(SurvivorCard, "Auto Skill-Check (High Precision)", true, function(v) Config.AutoSkillCheck = v end)
-CreateToggle(SurvivorCard, "Noclip", false, function(v) Config.NoClip = v end)
-CreateToggle(SurvivorCard, "God Revolver", false, function(v) Config.GodRevolver = v end)
-CreateToggle(SurvivorCard, "Speedhack", false, function(v) Config.SpeedHack = v end)
-CreateSlider(SurvivorCard, "Speed Value", 16, 100, 16, function(v) Config.SpeedValue = v end)
-CreateToggle(SurvivorCard, "Fast Repair / Interactions", false, function(v) Config.FastRepair = v end)
-CreateToggle(SurvivorCard, "Flowstate (Fast Windows)", false, function(v) Config.Flowstate = v end)
-CreateToggle(SurvivorCard, "Infinite Flashlight", false, function(v) Config.InfiniteFlashlight = v end)
-
-local KillerCard = CreateCard(MainR, "Killer Side")
-CreateToggle(KillerCard, "Killer Aimbot (Visible Only)", false, function(v) Config.KillerAimbot = v end)
-
-local PortalCard = CreateCard(MainR, "Portal Teleport System")
-CreateToggle(PortalCard, "Portal Teleport", false, function(v) Config.PortalTeleport = v end)
-
-local EnvironmentCard = CreateCard(VisualsL, "World Visuals")
-CreateToggle(EnvironmentCard, "FullBright", false, function(v) Config.FullBright = v end)
-CreateToggle(EnvironmentCard, "Remove Fog", false, function(v) Config.NoFog = v end)
-CreateToggle(EnvironmentCard, "Custom Time Of Day", false, function(v) Config.CustomTime = v end)
-CreateSlider(EnvironmentCard, "Clock Time", 0, 24, 14, function(v) Config.TimeOfDay = v end)
-CreateToggle(EnvironmentCard, "Custom FOV", false, function(v) Config.CustomFOVEnabled = v end)
-CreateSlider(EnvironmentCard, "FOV Value", 70, 120, 90, function(v) Config.FOVValue = v end)
-
-local ESPCard = CreateCard(VisualsR, "ESP & Tracers")
-CreateToggle(ESPCard, "Player ESP", false, function(v) Config.PlayerESP = v end)
-CreateColorPicker(ESPCard, "Player ESP Color", Config.PlayerESPColor, function(c) Config.PlayerESPColor = c end)
-
-CreateToggle(ESPCard, "Killer ESP", false, function(v) Config.KillerESP = v end)
-CreateColorPicker(ESPCard, "Killer ESP Color", Config.KillerESPColor, function(c) Config.KillerESPColor = c end)
-
-CreateToggle(ESPCard, "Generator ESP", false, function(v) Config.GeneratorESP = v end)
-CreateColorPicker(ESPCard, "Generator Color", Config.GeneratorESPColor, function(c) Config.GeneratorESPColor = c end)
-
-CreateToggle(ESPCard, "Pallet ESP", false, function(v) Config.PalletESP = v end)
-CreateColorPicker(ESPCard, "Pallet Color", Config.PalletESPColor, function(c) Config.PalletESPColor = c end)
-
-CreateToggle(ESPCard, "Window / Door ESP", false, function(v) Config.WindowESP = v end)
-CreateColorPicker(ESPCard, "Window Color", Config.WindowESPColor, function(c) Config.WindowESPColor = c end)
-
-CreateToggle(ESPCard, "White Tracers: Players", false, function(v) Config.TracersPlayers = v end)
-CreateToggle(ESPCard, "White Tracers: Killer", false, function(v) Config.TracersKiller = v end)
-CreateToggle(ESPCard, "Feet Triangle Ring", false, function(v) Config.TriangleRingEnabled = v end)
-CreateSlider(ESPCard, "Ring Size", 5, 40, 15, function(v) Config.RingSize = v end)
-CreateToggle(ESPCard, "Visual Model Spin", false, function(v) Config.VisualSpin = v end)
-CreateSlider(ESPCard, "Spin Speed", 10, 150, 50, function(v) Config.SpinSpeed = v end)
-CreateToggle(ESPCard, "Custom Crosshair", false, function(v) Config.Crosshair = v end)
-
-local BindMenuCard = CreateCard(BindsL, "Keybinds UI Display")
-CreateToggle(BindMenuCard, "Show Keybinds List", false, function(v)
-    KeybindsDisplay.Visible = v
-end)
-
-local ThemePresetCardL = CreateCard(ThemesL, "Presets Side A")
-CreateButton(ThemePresetCardL, "Theme: Pure White (Default)", function() ApplyTheme(PresetThemes.White) end)
-CreateButton(ThemePresetCardL, "Theme: Purple Neon", function() ApplyTheme(PresetThemes.Purple) end)
-CreateButton(ThemePresetCardL, "Theme: Cyan Neon", function() ApplyTheme(PresetThemes.Cyan) end)
-
-local ThemePresetCardR = CreateCard(ThemesR, "Presets Side B")
-CreateButton(ThemePresetCardR, "Theme: Emerald Green", function() ApplyTheme(PresetThemes.Green) end)
-CreateButton(ThemePresetCardR, "Theme: Crimson Red", function() ApplyTheme(PresetThemes.Red) end)
-CreateButton(ThemePresetCardR, "Theme: Hot Pink", function() ApplyTheme(PresetThemes.Pink) end)
-
-MainTabBtn.TextColor3 = Color3.fromRGB(15, 15, 18) MainTabBtn.BackgroundColor3 = AccentColor ActiveTabButton = MainTabBtn Pages[1].Visible = true
-
-local RingFolder = Instance.new("Folder", Workspace) RingFolder.Name = "VortexTriangleRing"
-local triangleParts = {}
-local function updateTriangleRing(enabled, count, radius, color)
-    if not enabled then RingFolder:ClearAllChildren() triangleParts = {} return end
-    if #triangleParts ~= count then
-        RingFolder:ClearAllChildren() triangleParts = {}
-        for i = 1, count do
-            local wedge = Instance.new("WedgePart") wedge.Name = "TriangleSegment" wedge.Size = Vector3.new(0.4, 0.4, 2)
-            wedge.Anchored = true wedge.CanCollide = false wedge.Material = Enum.Material.Neon wedge.Transparency = 0.1 wedge.Parent = RingFolder
-            table.insert(triangleParts, wedge)
-        end
-    end
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local rootPos = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0, 2.5, 0)
-        local angleStep = (math.pi * 2) / count
-        for i, wedge in ipairs(triangleParts) do
-            wedge.Color = color
-            local theta = i * angleStep + (tick() * 3)
-            local x = rootPos.X + math.cos(theta) * radius local z = rootPos.Z + math.sin(theta) * radius
-            local targetPos = Vector3.new(x, rootPos.Y, z)
-            wedge.CFrame = CFrame.new(targetPos, rootPos + Vector3.new(math.cos(theta + 0.1)*radius, 0, math.sin(theta + 0.1)*radius)) * CFrame.Angles(0, math.pi/2, 0)
-        end
-    end
-end
-
-local PortalPart = Instance.new("Part")
-PortalPart.Name = "VortexPortal"
-PortalPart.Size = Vector3.new(4, 7, 1)
-PortalPart.Anchored = true
-PortalPart.CanCollide = false
-PortalPart.Material = Enum.Material.Neon
-PortalPart.Color = AccentColor
-PortalPart.Transparency = 0.3
-PortalPart.Parent = Workspace
-PortalPart.Visible = false
-
-local PortalLight = Instance.new("PointLight", PortalPart)
-PortalLight.Color = AccentColor
-PortalLight.Range = 12
-PortalLight.Brightness = 3
-
-local function GetRandomMapPosition()
-    local mapParts = {}
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Anchored and not obj.Parent:FindFirstChild("Humanoid") then
-            local name = string.lower(obj.Name)
-            local parentName = string.lower(obj.Parent.Name)
-            if not string.find(name, "spawn") and not string.find(parentName, "spawn") and not string.find(name, "lobby") then
-                table.insert(mapParts, obj)
+    local function GetKiller()
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Team and p.Team.Name:lower():find("killer") then
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    return p.Character
+                end
             end
         end
+        return nil
     end
-    if #mapParts > 0 then
-        local randomPart = mapParts[math.random(1, #mapParts)]
-        return randomPart.Position + Vector3.new(math.random(-15, 15), 4, math.random(-15, 15))
-    end
-    return Vector3.new(math.random(-150, 150), 10, math.random(-150, 150))
-end
 
-local function SpawnPortal()
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-    local root = LocalPlayer.Character.HumanoidRootPart
-    local spawnPos = root.Position + (root.CFrame.LookVector * 6) + Vector3.new(0, 2, 0)
-    PortalPart.Position = spawnPos
-    PortalPart.CFrame = CFrame.new(spawnPos, root.Position)
-    PortalPart.Visible = true
-    
+    local function CreateHighlight(instance, color)
+        if not instance or ESP_Storage[instance] then return end
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "Vortex_ESP"
+        highlight.Adornee = instance
+        highlight.FillColor = color
+        highlight.FillTransparency = 0.5
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.OutlineTransparency = 0
+        highlight.Parent = instance
+        ESP_Storage[instance] = highlight
+    end
+
+    local function RemoveHighlight(instance)
+        if ESP_Storage[instance] then
+            ESP_Storage[instance]:Destroy()
+            ESP_Storage[instance] = nil
+        end
+    end
+
+    -- TAB: COMBAT
+    local ToggleDagger = Tabs.Combat:AddToggle("AutoDagger", {Title = "Auto Dagger / Parry", Default = false})
+    ToggleDagger:OnChanged(function(Value) Features.AutoDagger = Value end)
+
+    Tabs.Combat:AddKeybind("AutoDaggerKey", {
+        Title = "Auto Dagger Keybind",
+        Mode = "Toggle",
+        Default = "NONE",
+        Callback = function(Value) ToggleDagger:SetValue(Value) end
+    })
+
+    Tabs.Combat:AddSlider("DaggerDist", {
+        Title = "Trigger Distance (Studs)",
+        Default = 12,
+        Min = 5,
+        Max = 20,
+        Rounding = 1,
+        Callback = function(Value) Features.DaggerDistance = Value end
+    })
+
+    -- TAB: VISUALS
+    local TogglePlayers = Tabs.Visuals:AddToggle("ESP_Players", {Title = "Player / Killer ESP", Default = false})
+    TogglePlayers:OnChanged(function(Value)
+        Features.ESP_Players = Value
+        if not Value then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character then RemoveHighlight(p.Character) end
+            end
+        end
+    end)
+
+    Tabs.Visuals:AddKeybind("ESPKey", {
+        Title = "Toggle ESP Keybind",
+        Mode = "Toggle",
+        Default = "NONE",
+        Callback = function(Value) TogglePlayers:SetValue(Value) end
+    })
+
+    local ToggleGens = Tabs.Visuals:AddToggle("ESP_Gens", {Title = "Generators ESP", Default = false})
+    ToggleGens:OnChanged(function(Value)
+        Features.ESP_Generators = Value
+        if not Value then
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj.Name:lower():find("generator") then RemoveHighlight(obj) end
+            end
+        end
+    end)
+
+    local ToggleSpikes = Tabs.Visuals:AddToggle("ESP_Spikes", {Title = "Spikes ESP", Default = false})
+    ToggleSpikes:OnChanged(function(Value)
+        Features.ESP_Spikes = Value
+        if not Value then
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj.Name:lower():find("spike") or obj.Name:lower():find("hook") then RemoveHighlight(obj) end
+            end
+        end
+    end)
+
+    local ToggleFB = Tabs.Visuals:AddToggle("Fullbright", {Title = "Fullbright (No Darkness)", Default = false})
+    ToggleFB:OnChanged(function(Value)
+        Features.Fullbright = Value
+        if Value then
+            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+        else
+            Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+        end
+    end)
+
+    -- TAB: PLAYER
+    local ToggleSpeed = Tabs.Player:AddToggle("SpeedHack", {Title = "Enable Speed", Default = false})
+    ToggleSpeed:OnChanged(function(Value) Features.SpeedHack = Value end)
+
+    Tabs.Player:AddKeybind("SpeedKey", {
+        Title = "Speed Keybind",
+        Mode = "Toggle",
+        Default = "NONE",
+        Callback = function(Value) ToggleSpeed:SetValue(Value) end
+    })
+
+    Tabs.Player:AddSlider("SpeedValue", {
+        Title = "Speed Multiplier",
+        Default = 16,
+        Min = 16,
+        Max = 40,
+        Rounding = 1,
+        Callback = function(Value) Features.SpeedValue = Value end
+    })
+
+    -- TAB: AUTOMATION
+    local ToggleSkill = Tabs.Automation:AddToggle("AutoSkill", {Title = "Auto SkillCheck", Default = false})
+    ToggleSkill:OnChanged(function(Value) Features.AutoSkillCheck = Value end)
+
+    -- LOGIC LOOPS
     task.spawn(function()
-        task.wait(0.3)
-        local destPos = GetRandomMapPosition()
-        root.CFrame = CFrame.new(destPos)
-        task.wait(0.5)
-        PortalPart.Visible = false
+        while task.wait(0.05) do
+            if Features.AutoDagger and LocalPlayer.Character then
+                local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local killerChar = GetKiller()
+
+                if myRoot and killerChar then
+                    local killerRoot = killerChar:FindFirstChild("HumanoidRootPart")
+                    local killerHum = killerChar:FindFirstChildOfClass("Humanoid")
+
+                    if killerRoot and killerHum then
+                        local dist = (myRoot.Position - killerRoot.Position).Magnitude
+                        if dist <= Features.DaggerDistance then
+                            local isAttacking = false
+                            local animator = killerHum:FindFirstChildOfClass("Animator")
+                            if animator then
+                                for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+                                    local name = track.Name:lower()
+                                    if name:find("attack") or name:find("swing") or name:find("slash") then
+                                        isAttacking = true
+                                        break
+                                    end
+                                end
+                            end
+
+                            if isAttacking then
+                                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                                local dagger = (backpack and backpack:FindFirstChild("Dagger")) or LocalPlayer.Character:FindFirstChild("Dagger")
+                                
+                                if dagger then
+                                    if dagger.Parent == backpack then
+                                        LocalPlayer.Character.Humanoid:EquipTool(dagger)
+                                    end
+                                    task.wait(0.02)
+                                    dagger:Activate()
+                                    task.wait(0.5)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end)
+
+    RunService.RenderStepped:Connect(function()
+        if Features.SpeedHack and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Features.SpeedValue
+        end
+
+        if Features.ESP_Players then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    local col = p.Team and p.Team.Name:lower():find("killer") and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 100)
+                    CreateHighlight(p.Character, col)
+                end
+            end
+        end
+
+        if Features.ESP_Generators or Features.ESP_Spikes then
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if Features.ESP_Generators and obj.Name:lower():find("generator") and obj:IsA("Model") then
+                    CreateHighlight(obj, Color3.fromRGB(0, 170, 255))
+                end
+                if Features.ESP_Spikes and (obj.Name:lower():find("spike") or obj.Name:lower():find("hook")) and obj:IsA("Model") then
+                    CreateHighlight(obj, Color3.fromRGB(255, 170, 0))
+                end
+            end
+        end
+    end)
+
+    task.spawn(function()
+        while task.wait(0.1) do
+            if Features.AutoSkillCheck then
+                local pGui = LocalPlayer:FindFirstChild("PlayerGui")
+                if pGui then
+                    for _, gui in pairs(pGui:GetChildren()) do
+                        if gui.Name:lower():find("skill") or gui.Name:lower():find("generator") then
+                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                            task.wait(0.05)
+                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+
+    SaveManager:SetLibrary(Fluent)
+    InterfaceManager:SetLibrary(Fluent)
+    SaveManager:IgnoreThemeSettings()
+    SaveManager:SetIgnoreIndexes({})
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+    SaveManager:BuildConfigSection(Tabs.Settings)
+
+    Window:SelectTab(1)
+    Fluent:Notify({
+        Title = "Vortex Hub Loaded",
+        Content = "Welcome! Key: " .. usedKey .. " (" .. keyType .. ")",
+        Duration = 6
+    })
 end
 
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe or not Config.PortalTeleport or not Config.PortalKey then return end
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Config.PortalKey then
-        SpawnPortal()
-    end
-end)
+-- ====================================================================--
+--                            INIT VORTEX                               --
+--===================================================================--
 
-local TracersFolder = Instance.new("Folder", ScreenGui) 
-TracersFolder.Name = "VortexTracers"
-local tracerLines = {}
-
-local function DrawWhiteTracer(targetPos, index)
-    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
-    local line = tracerLines[index]
-    if onScreen then
-        if not line then
-            line = Instance.new("Frame", TracersFolder)
-            line.BorderSizePixel = 0
-            line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            line.BackgroundTransparency = 0.2
-            tracerLines[index] = line
-        end
-        line.Visible = true
-        local startPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-        local endPos = Vector2.new(screenPos.X, screenPos.Y)
-        local distance = (endPos - startPos).Magnitude
-        line.Size = UDim2.new(0, distance, 0, 1)
-        line.Position = UDim2.new(0, startPos.X, 0, startPos.Y)
-        line.Rotation = math.deg(math.atan2(endPos.Y - startPos.Y, endPos.X - startPos.X))
-        line.AnchorPoint = Vector2.new(0, 0.5)
-    else
-        if line then line.Visible = false end
-    end
-end
-
-local CrosshairGui = Instance.new("Frame", ScreenGui)
-CrosshairGui.Name = "VortexCrosshair" CrosshairGui.Size = UDim2.new(0, 10, 0, 10) CrosshairGui.Position = UDim2.new(0.5, -5, 0.5, -5) CrosshairGui.BackgroundTransparency = 1 CrosshairGui.Visible = false
-local c1 = Instance.new("Frame", CrosshairGui) c1.Size = UDim2.new(0, 4, 0, 2) c1.Position = UDim2.new(0, 3, 0, 4) c1.BackgroundColor3 = AccentColor c1.BorderSizePixel = 0 RegisterThemeObject(c1, "BackgroundColor3")
-local c2 = Instance.new("Frame", CrosshairGui) c2.Size = UDim2.new(0, 2, 0, 4) c2.Position = UDim2.new(0, 4, 0, 3) c2.BackgroundColor3 = AccentColor c2.BorderSizePixel = 0 RegisterThemeObject(c2, "BackgroundColor3")
-
-task.spawn(function()
-    while task.wait(3) do
-        local tempGens, tempPallets, tempWindows, tempKillers, tempPlayers = {}, {}, {}, {}, {}
-        for _, obj in ipairs(Workspace:GetDescendants()) do
-            if obj:IsA("Model") then
-                local name = string.lower(obj.Name)
-                if string.find(name, "generator") then table.insert(tempGens, obj)
-                elseif string.find(name, "pallet") then table.insert(tempPallets, obj)
-                elseif string.find(name, "window") or string.find(name, "door") then table.insert(tempWindows, obj) end
-            end
-        end
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                local char = p.Character
-                local isKiller = string.find(string.lower(p.Name), "killer") or char:FindFirstChild("Weapon") or char:FindFirstChild("Bat")
-                if isKiller then table.insert(tempKillers, char) else table.insert(tempPlayers, char) end
-            end
-        end
-        Cache.Generators, Cache.Pallets, Cache.Windows, Cache.KillersList, Cache.PlayersList = tempGens, tempPallets, tempWindows, tempKillers, tempPlayers
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.15) do
-        local closest, shortest = nil, math.huge
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-            for _, char in ipairs(Cache.KillersList) do
-                local root = char:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local dist = (root.Position - myPos).Magnitude
-                    if dist < shortest then shortest = dist closest = root end
-                end
-            end
-        end
-        Cache.ClosestKiller = closest
-    end
-end)
-
-local function ProcessSkillCheckFast()
-    if not Config.AutoSkillCheck then return end
-    local pGui = LocalPlayer:FindFirstChild("PlayerGui")
-    if not pGui then return end
-    for _, screen in ipairs(pGui:GetChildren()) do
-        if screen:IsA("ScreenGui") and screen.Enabled then
-            local needle = screen:FindFirstChild("Needle", true) or screen:FindFirstChild("Pointer", true)
-            local zone = screen:FindFirstChild("SuccessZone", true) or screen:FindFirstChild("GreatZone", true)
-            if needle and zone and needle.Visible and zone.Visible then
-                local needleRot = needle.Rotation % 360
-                local zoneRot = zone.Rotation % 360
-                local zoneWidth = zone.Size.X.Scale * 180
-                if math.abs(needleRot - zoneRot) <= (zoneWidth + 2) then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-                    task.wait(0.01)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-                    task.wait(0.3)
-                end
-            end
-        end
-    end
-end
-
-RunService.Heartbeat:Connect(function()
-    ProcessSkillCheckFast()
-    if Config.SpeedHack and LocalPlayer.Character then
-        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then hum.WalkSpeed = Config.SpeedValue end
-    end
-end)
-
-local throttleTimer = 0
-RunService.RenderStepped:Connect(function(dt)
-    throttleTimer = throttleTimer + dt
-    if Config.FullBright then Lighting.Brightness = 2 Lighting.ClockTime = 14 Lighting.GlobalShadows = false end
-    if Config.NoFog then Lighting.FogEnd = 999999 Lighting.FogStart = 999999 end
-    if Config.CustomTime then Lighting.ClockTime = Config.TimeOfDay end
-    if Config.CustomFOVEnabled then Camera.FieldOfView = Config.FOVValue end
-    if Config.TriangleRingEnabled then updateTriangleRing(true, 14, Config.RingSize, AccentColor) else updateTriangleRing(false, 0, 0, Color3.new()) end
-    if Config.NoClip and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end
-    end
-    CrosshairGui.Visible = Config.Crosshair
-    if Config.KillerAimbot and Cache.ClosestKiller then
-        Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Cache.ClosestKiller.Position), 0.35)
-    end
-
-    if throttleTimer >= 0.15 then
-        throttleTimer = 0
-        for _, char in ipairs(Cache.KillersList) do
-            local hl = char:FindFirstChild("VDHighlight")
-            if Config.KillerESP then
-                if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
-                hl.Adornee = char hl.FillColor = Config.KillerESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.OutlineTransparency = 0.2 hl.FillTransparency = 0.6
-            else
-                if hl then hl:Destroy() end
-            end
-        end
-        for _, char in ipairs(Cache.PlayersList) do
-            local hl = char:FindFirstChild("VDHighlight")
-            if Config.PlayerESP then
-                if not hl then hl = Instance.new("Highlight", char) hl.Name = "VDHighlight" end
-                hl.Adornee = char hl.FillColor = Config.PlayerESPColor hl.OutlineColor = Config.PlayerESPColor hl.OutlineTransparency = 1 hl.FillTransparency = 0.35
-            else
-                if hl then hl:Destroy() end
-            end
-        end
-        if Config.GeneratorESP then
-            for _, gen in ipairs(Cache.Generators) do
-                if not gen:FindFirstChild("GenHL") then
-                    local hl = Instance.new("Highlight", gen) hl.Name = "GenHL" hl.Adornee = gen
-                    hl.FillColor = Config.GeneratorESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
-                else
-                    gen.GenHL.FillColor = Config.GeneratorESPColor
-                end
-            end
-        else
-            for _, gen in ipairs(Cache.Generators) do local hl = gen:FindFirstChild("GenHL") if hl then hl:Destroy() end end
-        end
-        if Config.PalletESP then
-            for _, pal in ipairs(Cache.Pallets) do
-                if not pal:FindFirstChild("PalletHL") then
-                    local hl = Instance.new("Highlight", pal) hl.Name = "PalletHL" hl.Adornee = pal
-                    hl.FillColor = Config.PalletESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
-                else
-                    pal.PalletHL.FillColor = Config.PalletESPColor
-                end
-            end
-        else
-            for _, pal in ipairs(Cache.Pallets) do local hl = pal:FindFirstChild("PalletHL") if hl then hl:Destroy() end end
-        end
-        if Config.WindowESP then
-            for _, win in ipairs(Cache.Windows) do
-                if not win:FindFirstChild("WinHL") then
-                    local hl = Instance.new("Highlight", win) hl.Name = "WinHL" hl.Adornee = win
-                    hl.FillColor = Config.WindowESPColor hl.OutlineColor = Color3.fromRGB(255, 255, 255) hl.FillTransparency = 0.4
-                else
-                    win.WinHL.FillColor = Config.WindowESPColor
-                end
-            end
-        else
-            for _, win in ipairs(Cache.Windows) do local hl = win:FindFirstChild("WinHL") if hl then hl:Destroy() end end
-        end
-    end
+ShowLoadingScreen(function()
+    VerifyKeyAccess(function(key, keyType)
+        LoadMainVortexHub(key, keyType)
+    end)
 end)
