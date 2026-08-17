@@ -1,5 +1,5 @@
 --====================================================================--
---           VORTEX HUB - VIOLENCE DISTRICT (FIXED VERSION)           --
+--           VORTEX HUB - VIOLENCE DISTRICT (FULL RESTORE)            --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
@@ -392,6 +392,23 @@ local function LoadMainVortexHub(usedKey, keyType)
     })
     Tabs.Player:AddSlider("SpeedValue", {Title = "Speed Multiplier", Default = 16, Min = 16, Max = 40, Rounding = 1, Callback = function(Val) Features.SpeedValue = Val end})
 
+    -- ==================== AUTO DAGGER (PARRY) LOGIC ====================
+    task.spawn(function()
+        while task.wait(0.03) do
+            if Features.AutoDagger then
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if char then
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool and (tool.Name:lower():find("dagger") or tool.Name:lower():find("knife") or tool.Name:lower():find("parry")) then
+                            tool:Activate()
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+
     -- ==================== AIMBOT ====================
     RunService.RenderStepped:Connect(function()
         if Features.Aimbot then
@@ -561,7 +578,6 @@ local function LoadMainVortexHub(usedKey, keyType)
     local frameCount = 0
 
     RunService.RenderStepped:Connect(function(dt)
-        -- FPS Counter calculation
         frameCount = frameCount + 1
         lastFpsUpdate = lastFpsUpdate + dt
         if lastFpsUpdate >= 0.5 then
