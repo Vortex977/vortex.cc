@@ -23,25 +23,10 @@ local KeyDatabase = {
     ["VTX-1D-8F92A"] = { type = "1 Day Pass", duration = 86400 },
     ["VTX-1D-3K71P"] = { type = "1 Day Pass", duration = 86400 },
     ["VTX-1D-9M24L"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-4X18Q"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-7Z85W"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-2N63R"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-5V91T"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-1B47Y"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-6H32U"] = { type = "1 Day Pass", duration = 86400 },
-    ["VTX-1D-0J59E"] = { type = "1 Day Pass", duration = 86400 },
 
     -- 30 Days Keys
     ["VTX-30D-92KF8"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-17PQ3"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-84LW9"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-51XR2"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-36VT5"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-73MN1"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-28BZ4"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-69HC7"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-40UJ6"] = { type = "30 Days VIP", duration = 2592000 },
-    ["VTX-30D-15GE9"] = { type = "30 Days VIP", duration = 2592000 }
+    ["VTX-30D-17PQ3"] = { type = "30 Days VIP", duration = 2592000 }
 }
 
 -- Хранилище сохраненных данных
@@ -63,13 +48,6 @@ local function SaveData(key, hwid, activationTime)
     end
 end
 
--- Удаление существующих эффектов размытия из игры/прошлых запусков
-for _, v in pairs(Lighting:GetChildren()) do
-    if v:IsA("BlurEffect") then
-        v:Destroy()
-    end
-end
-
 -- ====================================================================--
 --                       LOADING SCREEN UI                            --
 --===================================================================--
@@ -86,11 +64,9 @@ local function ShowLoadingScreen(callback)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
 
-    local UICorner = Instance.new("UICorner", MainFrame)
-    UICorner.CornerRadius = UDim.new(0, 12)
-
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
     local UIStroke = Instance.new("UIStroke", MainFrame)
-    UIStroke.Color = Color3.fromRGB(120, 40, 250)
+    UIStroke.Color = Color3.fromRGB(140, 50, 255)
     UIStroke.Thickness = 2
 
     local Title = Instance.new("TextLabel", MainFrame)
@@ -126,16 +102,14 @@ local function ShowLoadingScreen(callback)
     BarBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     BarBackground.BorderSizePixel = 0
 
-    local BarCorner = Instance.new("UICorner", BarBackground)
-    BarCorner.CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", BarBackground).CornerRadius = UDim.new(1, 0)
 
     local BarFill = Instance.new("Frame", BarBackground)
     BarFill.Size = UDim2.new(0, 0, 1, 0)
     BarFill.BackgroundColor3 = Color3.fromRGB(140, 50, 255)
     BarFill.BorderSizePixel = 0
 
-    local FillCorner = Instance.new("UICorner", BarFill)
-    FillCorner.CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
     task.spawn(function()
         local stages = {
@@ -147,11 +121,11 @@ local function ShowLoadingScreen(callback)
 
         for _, stage in ipairs(stages) do
             Status.Text = stage.t
-            TweenService:Create(BarFill, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {Size = UDim2.new(stage.p, 0, 1, 0)}):Play()
-            task.wait(0.7)
+            TweenService:Create(BarFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Size = UDim2.new(stage.p, 0, 1, 0)}):Play()
+            task.wait(0.4)
         end
 
-        task.wait(0.3)
+        task.wait(0.2)
         ScreenGui:Destroy()
         callback()
     end)
@@ -250,7 +224,7 @@ local function VerifyKeyAccess(onSuccess)
             SaveData(inputKey, HWID, os.time())
             StatusLabel.TextColor3 = Color3.fromRGB(50, 255, 120)
             StatusLabel.Text = "Access Granted! Loading Vortex..."
-            task.wait(1)
+            task.wait(0.5)
             KeyGui:Destroy()
             onSuccess(inputKey, keyData.type)
         else
@@ -279,89 +253,150 @@ local function LoadMainVortexHub(usedKey, keyType)
         MinimizeKey = Enum.KeyCode.RightControl
     })
 
-    -- ==================== DRAGGABLE WATERMARK WITH FPS ====================
+    -- ==================== DRAGGABLE GUI WATERMARK ====================
     local WatermarkGui = Instance.new("ScreenGui")
     WatermarkGui.Name = "VortexWatermarkGui"
     WatermarkGui.Parent = (gethui and gethui()) or CoreGui
 
-    local WatermarkBtn = Instance.new("TextButton", WatermarkGui)
-    WatermarkBtn.Size = UDim2.new(0, 190, 0, 32)
-    WatermarkBtn.Position = UDim2.new(0, 20, 0, 20)
-    WatermarkBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
-    WatermarkBtn.BorderSizePixel = 0
-    WatermarkBtn.AutoButtonColor = true
-    WatermarkBtn.Text = ""
+    local WmMain = Instance.new("Frame", WatermarkGui)
+    WmMain.Size = UDim2.new(0, 210, 0, 36)
+    WmMain.Position = UDim2.new(0, 20, 0, 20)
+    WmMain.BackgroundColor3 = Color3.fromRGB(15, 15, 23)
+    WmMain.BorderSizePixel = 0
 
-    Instance.new("UICorner", WatermarkBtn).CornerRadius = UDim.new(0, 8)
-    local WmStroke = Instance.new("UIStroke", WatermarkBtn)
+    Instance.new("UICorner", WmMain).CornerRadius = UDim.new(0, 8)
+    local WmStroke = Instance.new("UIStroke", WmMain)
     WmStroke.Color = Color3.fromRGB(140, 50, 255)
     WmStroke.Thickness = 1.5
 
-    local WatermarkText = Instance.new("TextLabel", WatermarkBtn)
-    WatermarkText.Size = UDim2.new(1, 0, 1, 0)
-    WatermarkText.BackgroundTransparency = 1
-    WatermarkText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    WatermarkText.TextSize = 13
-    WatermarkText.Font = Enum.Font.GothamBold
-    WatermarkText.Text = "Vortex Hub | FPS: --"
+    local WmTitle = Instance.new("TextLabel", WmMain)
+    WmTitle.Size = UDim2.new(0, 110, 1, 0)
+    WmTitle.Position = UDim2.new(0, 12, 0, 0)
+    WmTitle.BackgroundTransparency = 1
+    WmTitle.Text = "VORTEX HUB"
+    WmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    WmTitle.Font = Enum.Font.GothamBold
+    WmTitle.TextSize = 13
+    WmTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Draggable Feature Logic
-    local dragging, dragInput, dragStart, startPos, isDragged
-    local function update(input)
-        local delta = input.Position - dragStart
-        WatermarkBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+    local WmFPS = Instance.new("TextLabel", WmMain)
+    WmFPS.Size = UDim2.new(0, 70, 1, 0)
+    WmFPS.Position = UDim2.new(1, -82, 0, 0)
+    WmFPS.BackgroundTransparency = 1
+    WmFPS.Text = "FPS: --"
+    WmFPS.TextColor3 = Color3.fromRGB(160, 160, 200)
+    WmFPS.Font = Enum.Font.GothamMedium
+    WmFPS.TextSize = 12
+    WmFPS.TextXAlignment = Enum.TextXAlignment.Right
 
-    WatermarkBtn.InputBegan:Connect(function(input)
+    -- Перетаскивание Gui Ватермарки
+    local dragging, dragInput, dragStart, startPos
+    WmMain.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            isDragged = false
             dragStart = input.Position
-            startPos = WatermarkBtn.Position
-
+            startPos = WmMain.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end)
-
-    WatermarkBtn.InputChanged:Connect(function(input)
+    WmMain.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            isDragged = true
-            update(input)
+            local delta = input.Position - dragStart
+            WmMain.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
-    -- Toggle Menu Click Logic
-    WatermarkBtn.MouseButton1Click:Connect(function()
-        if not isDragged and Window then
-            Window:Minimize()
+    -- ==================== KEYBINDS DISPLAY UI ====================
+    local KeybindsGui = Instance.new("ScreenGui")
+    KeybindsGui.Name = "VortexKeybindsUI"
+    KeybindsGui.Parent = (gethui and gethui()) or CoreGui
+
+    local KbFrame = Instance.new("Frame", KeybindsGui)
+    KbFrame.Size = UDim2.new(0, 170, 0, 180)
+    KbFrame.Position = UDim2.new(1, -190, 0.5, -90)
+    KbFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 23)
+    KbFrame.BorderSizePixel = 0
+
+    Instance.new("UICorner", KbFrame).CornerRadius = UDim.new(0, 10)
+    local KbStroke = Instance.new("UIStroke", KbFrame)
+    KbStroke.Color = Color3.fromRGB(140, 50, 255)
+    KbStroke.Thickness = 1.5
+
+    local KbTitle = Instance.new("TextLabel", KbFrame)
+    KbTitle.Size = UDim2.new(1, 0, 0, 28)
+    KbTitle.BackgroundTransparency = 1
+    KbTitle.Text = "KEYBINDS"
+    KbTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KbTitle.Font = Enum.Font.GothamBold
+    KbTitle.TextSize = 13
+
+    local KbList = Instance.new("UIListLayout", KbFrame)
+    KbList.SortOrder = Enum.SortOrder.LayoutOrder
+    KbList.Padding = UDim.new(0, 4)
+
+    local KbPadding = Instance.new("UIPadding", KbFrame)
+    KbPadding.PaddingTop = UDim.new(0, 32)
+    KbPadding.PaddingLeft = UDim.new(0, 10)
+    KbPadding.PaddingRight = UDim.new(0, 10)
+
+    -- Перетаскивание Квадратного Окна Биндов
+    local kbDragging, kbDragInput, kbDragStart, kbStartPos
+    KbFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            kbDragging = true
+            kbDragStart = input.Position
+            kbStartPos = KbFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then kbDragging = false end
+            end)
+        end
+    end)
+    KbFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            kbDragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == kbDragInput and kbDragging then
+            local delta = input.Position - kbDragStart
+            KbFrame.Position = UDim2.new(kbStartPos.X.Scale, kbStartPos.X.Offset + delta.X, kbStartPos.Y.Scale, kbStartPos.Y.Offset + delta.Y)
         end
     end)
 
-    -- FPS Counter Loop
-    task.spawn(function()
-        local lastTime = os.clock()
-        local frameCount = 0
-        RunService.RenderStepped:Connect(function()
-            frameCount = frameCount + 1
-            local currentTime = os.clock()
-            if currentTime - lastTime >= 1 then
-                local fps = math.floor(frameCount / (currentTime - lastTime))
-                WatermarkText.Text = "Vortex Hub | FPS: " .. tostring(fps)
-                frameCount = 0
-                lastTime = currentTime
+    local KeybindEntries = {}
+    local function AddKeybindWidget(name, bindText)
+        local Label = Instance.new("TextLabel", KbFrame)
+        Label.Size = UDim2.new(1, 0, 0, 18)
+        Label.BackgroundTransparency = 1
+        Label.Font = Enum.Font.GothamMedium
+        Label.TextSize = 11
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Text = name .. " [" .. bindText .. "]"
+        Label.TextColor3 = Color3.fromRGB(90, 90, 110) -- По умолчанию тусклый
+        KeybindEntries[name] = Label
+    end
+
+    local function UpdateKeybindWidget(name, active, bindText)
+        if KeybindEntries[name] then
+            KeybindEntries[name].Text = name .. " [" .. (bindText or "NONE") .. "]"
+            if active then
+                KeybindEntries[name].TextColor3 = Color3.fromRGB(220, 220, 255) -- Яркий активный
+            else
+                KeybindEntries[name].TextColor3 = Color3.fromRGB(90, 90, 110) -- Тусклый выключенный
             end
-        end)
-    end)
+        end
+    end
+
+    AddKeybindWidget("Auto Dagger", "NONE")
+    AddKeybindWidget("ESP Players", "NONE")
+    AddKeybindWidget("SpeedHack", "NONE")
 
     -- ==================== TABS SETUP ====================
     local Tabs = {
@@ -372,59 +407,37 @@ local function LoadMainVortexHub(usedKey, keyType)
         Settings = Window:AddTab({ Title = "Settings & Binds", Icon = "settings" })
     }
 
-    local ESP_Storage = {}
     local Features = {
         AutoDagger = false,
         DaggerDistance = 12,
         ESP_Players = false,
+        ESP_KillerColor = Color3.fromRGB(255, 50, 50),
+        ESP_SurvivorColor = Color3.fromRGB(50, 255, 100),
         ESP_Generators = false,
         ESP_Spikes = false,
         SpeedHack = false,
         SpeedValue = 16,
         AutoSkillCheck = false,
-        Fullbright = false
+        Fullbright = false,
+        RiceHat = false,
+        CartoonKillerCone = false
     }
-
-    local function GetKiller()
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Team and p.Team.Name:lower():find("killer") then
-                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    return p.Character
-                end
-            end
-        end
-        return nil
-    end
-
-    local function CreateHighlight(instance, color)
-        if not instance or ESP_Storage[instance] then return end
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "Vortex_ESP"
-        highlight.Adornee = instance
-        highlight.FillColor = color
-        highlight.FillTransparency = 0.5
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.OutlineTransparency = 0
-        highlight.Parent = instance
-        ESP_Storage[instance] = highlight
-    end
-
-    local function RemoveHighlight(instance)
-        if ESP_Storage[instance] then
-            ESP_Storage[instance]:Destroy()
-            ESP_Storage[instance] = nil
-        end
-    end
 
     -- TAB: COMBAT
     local ToggleDagger = Tabs.Combat:AddToggle("AutoDagger", {Title = "Auto Dagger / Parry", Default = false})
-    ToggleDagger:OnChanged(function(Value) Features.AutoDagger = Value end)
+    ToggleDagger:OnChanged(function(Value)
+        Features.AutoDagger = Value
+        UpdateKeybindWidget("Auto Dagger", Value)
+    end)
 
     Tabs.Combat:AddKeybind("AutoDaggerKey", {
         Title = "Auto Dagger Keybind",
         Mode = "Toggle",
         Default = "NONE",
-        Callback = function(Value) ToggleDagger:SetValue(Value) end
+        Callback = function(Value, Bind)
+            ToggleDagger:SetValue(Value)
+            UpdateKeybindWidget("Auto Dagger", Value, tostring(Bind))
+        end
     })
 
     Tabs.Combat:AddSlider("DaggerDist", {
@@ -440,61 +453,58 @@ local function LoadMainVortexHub(usedKey, keyType)
     local TogglePlayers = Tabs.Visuals:AddToggle("ESP_Players", {Title = "Player / Killer ESP", Default = false})
     TogglePlayers:OnChanged(function(Value)
         Features.ESP_Players = Value
-        if not Value then
-            for _, p in pairs(Players:GetPlayers()) do
-                if p.Character then RemoveHighlight(p.Character) end
-            end
-        end
+        UpdateKeybindWidget("ESP Players", Value)
     end)
 
     Tabs.Visuals:AddKeybind("ESPKey", {
         Title = "Toggle ESP Keybind",
         Mode = "Toggle",
         Default = "NONE",
-        Callback = function(Value) TogglePlayers:SetValue(Value) end
+        Callback = function(Value, Bind)
+            TogglePlayers:SetValue(Value)
+            UpdateKeybindWidget("ESP Players", Value, tostring(Bind))
+        end
     })
 
+    local KillerColorPicker = Tabs.Visuals:AddColorpicker("KillerColor", {
+        Title = "Killer ESP Color",
+        Default = Color3.fromRGB(255, 50, 50)
+    })
+    KillerColorPicker:OnChanged(function(Value) Features.ESP_KillerColor = Value end)
+
+    local SurvivorColorPicker = Tabs.Visuals:AddColorpicker("SurvivorColor", {
+        Title = "Survivor ESP Color",
+        Default = Color3.fromRGB(50, 255, 100)
+    })
+    SurvivorColorPicker:OnChanged(function(Value) Features.ESP_SurvivorColor = Value end)
+
+    local ToggleHat = Tabs.Visuals:AddToggle("RiceHatToggle", {Title = "Chinese Rice Hat (3D)", Default = false})
+    ToggleHat:OnChanged(function(Value) Features.RiceHat = Value end)
+
+    local ToggleCartoonCone = Tabs.Visuals:AddToggle("CartoonConeToggle", {Title = "Cartoon Killer Vision Lines", Default = false})
+    ToggleCartoonCone:OnChanged(function(Value) Features.CartoonKillerCone = Value end)
+
     local ToggleGens = Tabs.Visuals:AddToggle("ESP_Gens", {Title = "Generators ESP", Default = false})
-    ToggleGens:OnChanged(function(Value)
-        Features.ESP_Generators = Value
-        if not Value then
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj.Name:lower():find("generator") then RemoveHighlight(obj) end
-            end
-        end
-    end)
+    ToggleGens:OnChanged(function(Value) Features.ESP_Generators = Value end)
 
     local ToggleSpikes = Tabs.Visuals:AddToggle("ESP_Spikes", {Title = "Spikes ESP", Default = false})
-    ToggleSpikes:OnChanged(function(Value)
-        Features.ESP_Spikes = Value
-        if not Value then
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj.Name:lower():find("spike") or obj.Name:lower():find("hook") then RemoveHighlight(obj) end
-            end
-        end
-    end)
-
-    local ToggleFB = Tabs.Visuals:AddToggle("Fullbright", {Title = "Fullbright (No Darkness)", Default = false})
-    ToggleFB:OnChanged(function(Value)
-        Features.Fullbright = Value
-        if Value then
-            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-            Lighting.Brightness = 2
-            Lighting.ClockTime = 14
-        else
-            Lighting.Ambient = Color3.fromRGB(127, 127, 127)
-        end
-    end)
+    ToggleSpikes:OnChanged(function(Value) Features.ESP_Spikes = Value end)
 
     -- TAB: PLAYER
     local ToggleSpeed = Tabs.Player:AddToggle("SpeedHack", {Title = "Enable Speed", Default = false})
-    ToggleSpeed:OnChanged(function(Value) Features.SpeedHack = Value end)
+    ToggleSpeed:OnChanged(function(Value)
+        Features.SpeedHack = Value
+        UpdateKeybindWidget("SpeedHack", Value)
+    end)
 
     Tabs.Player:AddKeybind("SpeedKey", {
         Title = "Speed Keybind",
         Mode = "Toggle",
         Default = "NONE",
-        Callback = function(Value) ToggleSpeed:SetValue(Value) end
+        Callback = function(Value, Bind)
+            ToggleSpeed:SetValue(Value)
+            UpdateKeybindWidget("SpeedHack", Value, tostring(Bind))
+        end
     })
 
     Tabs.Player:AddSlider("SpeedValue", {
@@ -510,78 +520,132 @@ local function LoadMainVortexHub(usedKey, keyType)
     local ToggleSkill = Tabs.Automation:AddToggle("AutoSkill", {Title = "Auto SkillCheck", Default = false})
     ToggleSkill:OnChanged(function(Value) Features.AutoSkillCheck = Value end)
 
-    -- LOGIC LOOPS
-    task.spawn(function()
-        while task.wait(0.05) do
-            if Features.AutoDagger and LocalPlayer.Character then
-                local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                local killerChar = GetKiller()
-
-                if myRoot and killerChar then
-                    local killerRoot = killerChar:FindFirstChild("HumanoidRootPart")
-                    local killerHum = killerChar:FindFirstChildOfClass("Humanoid")
-
-                    if killerRoot and killerHum then
-                        local dist = (myRoot.Position - killerRoot.Position).Magnitude
-                        if dist <= Features.DaggerDistance then
-                            local isAttacking = false
-                            local animator = killerHum:FindFirstChildOfClass("Animator")
-                            if animator then
-                                for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                                    local name = track.Name:lower()
-                                    if name:find("attack") or name:find("swing") or name:find("slash") then
-                                        isAttacking = true
-                                        break
-                                    end
-                                end
-                            end
-
-                            if isAttacking then
-                                local backpack = LocalPlayer:FindFirstChild("Backpack")
-                                local dagger = (backpack and backpack:FindFirstChild("Dagger")) or LocalPlayer.Character:FindFirstChild("Dagger")
-                                
-                                if dagger then
-                                    if dagger.Parent == backpack then
-                                        LocalPlayer.Character.Humanoid:EquipTool(dagger)
-                                    end
-                                    task.wait(0.02)
-                                    dagger:Activate()
-                                    task.wait(0.5)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
+    -- ==================== OPTIMIZED ESP & VISUAL LOGIC ====================
+    local ESP_Storage = {}
+    local function ApplyHighlight(inst, col)
+        if not inst then return end
+        local hl = ESP_Storage[inst]
+        if not hl then
+            hl = Instance.new("Highlight")
+            hl.Name = "Vortex_ESP"
+            hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
+            hl.Parent = inst
+            ESP_Storage[inst] = hl
         end
-    end)
+        hl.Adornee = inst
+        hl.FillColor = col
+        hl.Enabled = true
+    end
+
+    local function ClearHighlight(inst)
+        if ESP_Storage[inst] then
+            ESP_Storage[inst].Enabled = false
+        end
+    end
+
+    -- CHINESE RICE HAT LOGIC
+    local function UpdateRiceHat()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local head = char:FindFirstChild("Head")
+        if not head then return end
+
+        local hat = char:FindFirstChild("VortexRiceHat")
+        if Features.RiceHat then
+            if not hat then
+                hat = Instance.new("Part")
+                hat.Name = "VortexRiceHat"
+                hat.Size = Vector3.new(3, 0.7, 3)
+                hat.CanCollide = false
+                hat.Massless = true
+                hat.Color = Color3.fromRGB(140, 50, 255)
+                
+                local mesh = Instance.new("SpecialMesh", hat)
+                mesh.MeshType = Enum.MeshType.Cone
+                mesh.Scale = Vector3.new(3, 0.7, 3)
+
+                local weld = Instance.new("Weld", hat)
+                weld.Part0 = head
+                weld.Part1 = hat
+                weld.C0 = CFrame.new(0, 0.85, 0)
+                hat.Parent = char
+            end
+        else
+            if hat then hat:Destroy() end
+        end
+    end
+
+    -- CARTOON KILLER VISION LINES
+    local CartoonRings = {}
+    local function UpdateCartoonVision(killerChar)
+        if not Features.CartoonKillerCone or not killerChar then
+            for _, ring in pairs(CartoonRings) do ring.Visible = false end
+            return
+        end
+
+        local head = killerChar:FindFirstChild("Head")
+        if not head then return end
+
+        for i = 1, 3 do
+            local ring = CartoonRings[i]
+            if not ring then
+                ring = Instance.new("SelectionBox")
+                ring.Color3 = Color3.fromRGB(255, 120, 0)
+                ring.LineThickness = 0.05
+                ring.Parent = workspace
+                CartoonRings[i] = ring
+            end
+            
+            ring.Adornee = head
+            ring.Visible = true
+        end
+    end
+
+    -- MAIN LOOP & FPS TRACKER
+    local lastFpsTime = os.clock()
+    local frameCount = 0
 
     RunService.RenderStepped:Connect(function()
+        -- FPS Counter
+        frameCount = frameCount + 1
+        local now = os.clock()
+        if now - lastFpsTime >= 1 then
+            WmFPS.Text = "FPS: " .. tostring(math.floor(frameCount / (now - lastFpsTime)))
+            frameCount = 0
+            lastFpsTime = now
+        end
+
+        -- WalkSpeed
         if Features.SpeedHack and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = Features.SpeedValue
         end
 
+        -- Player ESP Update
         if Features.ESP_Players then
             for _, p in pairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local col = p.Team and p.Team.Name:lower():find("killer") and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 100)
-                    CreateHighlight(p.Character, col)
+                if p ~= LocalPlayer and p.Character then
+                    local isKiller = p.Team and p.Team.Name:lower():find("killer")
+                    local col = isKiller and Features.ESP_KillerColor or Features.ESP_SurvivorColor
+                    ApplyHighlight(p.Character, col)
+
+                    if isKiller and Features.CartoonKillerCone then
+                        UpdateCartoonVision(p.Character)
+                    end
                 end
             end
+        else
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character then ClearHighlight(p.Character) end
+            end
+            UpdateCartoonVision(nil)
         end
 
-        if Features.ESP_Generators or Features.ESP_Spikes then
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if Features.ESP_Generators and obj.Name:lower():find("generator") and obj:IsA("Model") then
-                    CreateHighlight(obj, Color3.fromRGB(0, 170, 255))
-                end
-                if Features.ESP_Spikes and (obj.Name:lower():find("spike") or obj.Name:lower():find("hook")) and obj:IsA("Model") then
-                    CreateHighlight(obj, Color3.fromRGB(255, 170, 0))
-                end
-            end
-        end
+        -- Update Rice Hat Visual
+        UpdateRiceHat()
     end)
 
+    -- AUTOMATION LOOP
     task.spawn(function()
         while task.wait(0.1) do
             if Features.AutoSkillCheck then
@@ -590,7 +654,7 @@ local function LoadMainVortexHub(usedKey, keyType)
                     for _, gui in pairs(pGui:GetChildren()) do
                         if gui.Name:lower():find("skill") or gui.Name:lower():find("generator") then
                             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-                            task.wait(0.05)
+                            task.wait(0.03)
                             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
                         end
                     end
@@ -608,9 +672,9 @@ local function LoadMainVortexHub(usedKey, keyType)
 
     Window:SelectTab(1)
     Fluent:Notify({
-        Title = "Vortex Hub Loaded",
-        Content = "Welcome! Key: " .. usedKey .. " (" .. keyType .. ")",
-        Duration = 6
+        Title = "Vortex Hub Active",
+        Content = "Hub Loaded Successfully!",
+        Duration = 5
     })
 end
 
