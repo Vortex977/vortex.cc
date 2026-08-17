@@ -1,5 +1,5 @@
 --====================================================================--
---           VORTEX HUB - VIOLENCE DISTRICT (STABLE VERSION)          --
+--           VORTEX HUB - VIOLENCE DISTRICT (FIXED VERSION)           --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
@@ -155,6 +155,7 @@ local function LoadMainVortexHub(usedKey, keyType)
     local VisualsGui = Instance.new("ScreenGui")
     VisualsGui.Name = "VortexVisualsOverlay"
     VisualsGui.ResetOnSpawn = false
+    VisualsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     VisualsGui.Parent = UI_PARENT
 
     -- Crosshair (Dot)
@@ -189,7 +190,7 @@ local function LoadMainVortexHub(usedKey, keyType)
     WmText.Size = UDim2.new(1, -20, 1, 0)
     WmText.Position = UDim2.new(0, 10, 0, 0)
     WmText.BackgroundTransparency = 1
-    WmText.Text = "VORTEX HUB  |  FPS: --"
+    WmText.Text = "VORTEX HUB  |  FPS: 60"
     WmText.TextColor3 = Color3.fromRGB(220, 220, 230)
     WmText.Font = Enum.Font.GothamMedium
     WmText.TextSize = 12
@@ -522,7 +523,7 @@ local function LoadMainVortexHub(usedKey, keyType)
         end
     end)
 
-    -- ==================== RENDER LOOP & ESP ====================
+    -- ==================== RENDER LOOP & FPS / ESP ====================
     local ESP_Cache = {}
     local Object_ESP_Cache = {}
 
@@ -556,15 +557,18 @@ local function LoadMainVortexHub(usedKey, keyType)
         hl.Enabled = true
     end
 
-    local lastTime = os.clock()
-    local frames = 0
-    RunService.RenderStepped:Connect(function()
-        frames = frames + 1
-        local now = os.clock()
-        if now - lastTime >= 1 then
-            WmText.Text = "VORTEX HUB  |  FPS: " .. frames
-            frames = 0
-            lastTime = now
+    local lastFpsUpdate = 0
+    local frameCount = 0
+
+    RunService.RenderStepped:Connect(function(dt)
+        -- FPS Counter calculation
+        frameCount = frameCount + 1
+        lastFpsUpdate = lastFpsUpdate + dt
+        if lastFpsUpdate >= 0.5 then
+            local fps = math.floor(frameCount / lastFpsUpdate + 0.5)
+            WmText.Text = "VORTEX HUB  |  FPS: " .. fps
+            frameCount = 0
+            lastFpsUpdate = 0
         end
 
         if Features.FOVChanger then
