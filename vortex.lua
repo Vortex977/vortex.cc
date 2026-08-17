@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local HWID = RbxAnalyticsService:GetClientId()
@@ -261,17 +262,29 @@ local function LoadMainVortexHub(usedKey, keyType)
     local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
     local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+    -- Blur Effect Control
+    local BlurEffect = Lighting:FindFirstChild("VortexBlur") or Instance.new("BlurEffect")
+    BlurEffect.Name = "VortexBlur"
+    BlurEffect.Size = 18
+    BlurEffect.Enabled = true
+    BlurEffect.Parent = Lighting
+
     local Window = Fluent:CreateWindow({
         Title = "VORTEX HUB | Violence District",
         SubTitle = "License: " .. keyType,
         TabWidth = 160,
         Size = UDim2.fromOffset(580, 460),
-        Acrylic = true,
+        Acrylic = false,
         Theme = "Dark",
         MinimizeKey = Enum.KeyCode.RightControl
     })
 
-    -- ==================== WATERMARK WITH FPS ====================
+    -- Toggle Blur on Window Minimize/Close
+    Window:OnMinimize(function(minimized)
+        BlurEffect.Enabled = not minimized
+    end)
+
+    -- ==================== DRAGGABLE WATERMARK WITH FPS ====================
     local WatermarkGui = Instance.new("ScreenGui")
     WatermarkGui.Name = "VortexWatermarkGui"
     WatermarkGui.Parent = (gethui and gethui()) or CoreGui
@@ -297,7 +310,49 @@ local function LoadMainVortexHub(usedKey, keyType)
     WatermarkText.Font = Enum.Font.GothamBold
     WatermarkText.Text = "Vortex Hub | FPS: --"
 
-    -- FPS Counter Logic
+    -- Draggable Feature Logic
+    local dragging, dragInput, dragStart, startPos, isDragged
+    local function update(input)
+        local delta = input.Position - dragStart
+        WatermarkBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    WatermarkBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            isDragged = false
+            dragStart = input.Position
+            startPos = WatermarkBtn.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    WatermarkBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            isDragged = true
+            update(input)
+        end
+    end)
+
+    -- Toggle Menu Click Logic
+    WatermarkBtn.MouseButton1Click:Connect(function()
+        if not isDragged and Window then
+            Window:Minimize()
+        end
+    end)
+
+    -- FPS Counter Loop
     task.spawn(function()
         local lastTime = os.clock()
         local frameCount = 0
@@ -311,13 +366,6 @@ local function LoadMainVortexHub(usedKey, keyType)
                 lastTime = currentTime
             end
         end)
-    end)
-
-    -- Toggle UI Window on Watermark Click
-    WatermarkBtn.MouseButton1Click:Connect(function()
-        if Window then
-            Window:Minimize()
-        end
     end)
 
     -- ==================== TABS SETUP ====================
